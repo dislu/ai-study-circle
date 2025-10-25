@@ -1,0 +1,108 @@
+{
+  "version": "8.11.0",
+  "objects": [
+    {
+      "id": "user-activity-dashboard",
+      "type": "dashboard",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "AI Study Circle - User Activity",
+        "hits": 0,
+        "description": "User interactions, page views, and engagement metrics",
+        "panelsJSON": "[{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":0,\"w\":24,\"h\":15,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{},\"panelRefName\":\"panel_1\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":0,\"w\":24,\"h\":15,\"i\":\"2\"},\"panelIndex\":\"2\",\"embeddableConfig\":{},\"panelRefName\":\"panel_2\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":15,\"w\":24,\"h\":15,\"i\":\"3\"},\"panelIndex\":\"3\",\"embeddableConfig\":{},\"panelRefName\":\"panel_3\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":15,\"w\":24,\"h\":15,\"i\":\"4\"},\"panelIndex\":\"4\",\"embeddableConfig\":{},\"panelRefName\":\"panel_4\"}]",
+        "timeRestore": false,
+        "timeTo": "now",
+        "timeFrom": "now-24h",
+        "refreshInterval": {
+          "pause": false,
+          "value": 60000
+        },
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"query\":\"\",\"language\":\"kuery\"},\"filter\":[]}"
+        }
+      },
+      "references": [
+        {
+          "name": "panel_1",
+          "type": "visualization",
+          "id": "user-actions-pie-chart"
+        },
+        {
+          "name": "panel_2",
+          "type": "visualization",
+          "id": "page-views-timeline"
+        },
+        {
+          "name": "panel_3",
+          "type": "visualization",
+          "id": "session-duration-histogram"
+        },
+        {
+          "name": "panel_4",
+          "type": "visualization",
+          "id": "popular-pages-table"
+        }
+      ]
+    },
+    {
+      "id": "user-actions-pie-chart",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "User Actions Distribution",
+        "visState": "{\"title\":\"User Actions Distribution\",\"type\":\"pie\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"action.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":10,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"segment\"}]}",
+        "uiStateJSON": "{}",
+        "description": "",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"action\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "page-views-timeline",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Page Views Over Time",
+        "visState": "{\"title\":\"Page Views Over Time\",\"type\":\"line\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"params\":{\"field\":\"@timestamp\",\"timeRange\":{\"from\":\"now-24h\",\"to\":\"now\"},\"useNormalizedEsInterval\":true,\"scaleMetricValues\":false,\"interval\":\"auto\",\"drop_partials\":false,\"min_doc_count\":1,\"extended_bounds\":{}},\"schema\":\"segment\"}]}",
+        "uiStateJSON": "{}",
+        "description": "",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"match\":{\"action\":\"page_view\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "session-duration-histogram",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Session Duration Distribution",
+        "visState": "{\"title\":\"Session Duration Distribution\",\"type\":\"histogram\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"histogram\",\"params\":{\"field\":\"sessionDuration\",\"interval\":60000,\"min_doc_count\":1,\"has_extended_bounds\":false,\"extended_bounds\":{\"min\":\"\",\"max\":\"\"}},\"schema\":\"segment\"}]}",
+        "uiStateJSON": "{}",
+        "description": "",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"sessionDuration\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "popular-pages-table",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Most Popular Pages",
+        "visState": "{\"title\":\"Most Popular Pages\",\"type\":\"table\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"page.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":10,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"bucket\"}]}",
+        "uiStateJSON": "{}",
+        "description": "",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"match\":{\"action\":\"page_view\"}},\"filter\":[]}"
+        }
+      }
+    }
+  ]
+}

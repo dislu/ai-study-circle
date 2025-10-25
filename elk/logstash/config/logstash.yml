@@ -1,0 +1,51 @@
+# Logstash Configuration for AI Study Circle
+# Main configuration file for the Logstash service
+
+# Node settings
+node.name: "ai-study-logstash"
+
+# Paths
+path.data: /usr/share/logstash/data
+path.logs: /usr/share/logstash/logs
+path.settings: /usr/share/logstash/config
+
+# Pipeline settings
+pipeline.workers: 2
+pipeline.batch.size: 125
+pipeline.batch.delay: 50
+pipeline.unsafe_shutdown: false
+
+# Pipeline configuration
+path.config: /usr/share/logstash/pipeline
+
+# Automatic config reload
+config.reload.automatic: true
+config.reload.interval: 3s
+
+# HTTP API settings
+http.host: "0.0.0.0"
+http.port: 9600
+
+# Log level
+log.level: info
+
+# Monitoring
+monitoring.enabled: true
+monitoring.elasticsearch.hosts: ["http://elasticsearch:9200"]
+
+# Dead letter queue
+dead_letter_queue.enable: true
+dead_letter_queue.max_bytes: 1gb
+
+# Performance tuning
+pipeline.java_execution: true
+pipeline.plugin_classloaders: true
+
+# Queue settings
+queue.type: persisted
+queue.page_capacity: 64mb
+queue.max_events: 0
+queue.max_bytes: 1gb
+queue.checkpoint.acks: 1024
+queue.checkpoint.writes: 1024
+queue.checkpoint.interval: 1000

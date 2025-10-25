@@ -1,0 +1,170 @@
+{
+  "trigger": {
+    "schedule": {
+      "interval": "30s"
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "search_type": "query_then_fetch",
+        "indices": ["ai-study-logs-*"],
+        "rest_total_hits_as_int": true,
+        "body": {
+          "query": {
+            "bool": {
+              "must": [
+                {
+                  "exists": {
+                    "field": "security"
+                  }
+                },
+                {
+                  "range": {
+                    "@timestamp": {
+                      "gte": "now-1m"
+                    }
+                  }
+                }
+              ],
+              "should": [
+                {
+                  "range": {
+                    "security.risk_score": {
+                      "gte": 8
+                    }
+                  }
+                },
+                {
+                  "terms": {
+                    "security.risk_level.keyword": ["critical", "high"]
+                  }
+                },
+                {
+                  "terms": {
+                    "security_event_type.keyword": [
+                      "brute_force_attempt",
+                      "sql_injection_attempt",
+                      "xss_attempt",
+                      "csrf_attempt",
+                      "unauthorized_access",
+                      "privilege_escalation",
+                      "data_exfiltration"
+                    ]
+                  }
+                },
+                {
+                  "bool": {
+                    "must": [
+                      {
+                        "match": {
+                          "auth_result": "failure"
+                        }
+                      },
+                      {
+                        "range": {
+                          "failed_attempts_count": {
+                            "gte": 5
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "minimum_should_match": 1
+            }
+          },
+          "aggs": {
+            "threat_sources": {
+              "terms": {
+                "field": "geoip.country_name.keyword",
+                "size": 10
+              },
+              "aggs": {
+                "avg_risk_score": {
+                  "avg": {
+                    "field": "security.risk_score"
+                  }
+                }
+              }
+            },
+            "attack_types": {
+              "terms": {
+                "field": "security_event_type.keyword",
+                "size": 10
+              }
+            },
+            "targeted_endpoints": {
+              "terms": {
+                "field": "endpoint.keyword",
+                "size": 5
+              }
+            },
+            "risk_score_stats": {
+              "stats": {
+                "field": "security.risk_score"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "script": {
+      "source": "def total_threats = ctx.payload.hits.total; def high_risk_threshold = 5; return total_threats >= high_risk_threshold;"
+    }
+  },
+  "transform": {
+    "script": {
+      "source": "def threat_count = ctx.payload.hits.total; def avg_risk_score = ctx.payload.aggregations.risk_score_stats.avg; def max_risk_score = ctx.payload.aggregations.risk_score_stats.max; def threat_sources = [:]; for (bucket in ctx.payload.aggregations.threat_sources.buckets) { threat_sources[bucket.key] = ['count': bucket.doc_count, 'avg_risk': Math.round(bucket.avg_risk_score.value * 10) / 10]; } def attack_types = [:]; for (bucket in ctx.payload.aggregations.attack_types.buckets) { attack_types[bucket.key] = bucket.doc_count; } def targeted_endpoints = [:]; for (bucket in ctx.payload.aggregations.targeted_endpoints.buckets) { targeted_endpoints[bucket.key] = bucket.doc_count; } def severity = 'medium'; if (threat_count >= 20 || max_risk_score >= 9) { severity = 'critical'; } else if (threat_count >= 10 || max_risk_score >= 7) { severity = 'high'; } return ['threat_count': threat_count, 'avg_risk_score': Math.round(avg_risk_score * 10) / 10, 'max_risk_score': Math.round(max_risk_score * 10) / 10, 'severity': severity, 'threat_sources': threat_sources, 'attack_types': attack_types, 'targeted_endpoints': targeted_endpoints, 'timestamp': ctx.trigger.triggered_time];"
+    }
+  },
+  "actions": {
+    "critical_security_alert": {
+      "condition": {
+        "compare": {
+          "ctx.payload.severity": {
+            "eq": "critical"
+          }
+        }
+      },
+      "email": {
+        "profile": "standard",
+        "to": ["security@ai-study-circle.com", "admin@ai-study-circle.com", "devops@ai-study-circle.com"],
+        "subject": "🔴 CRITICAL Security Threat Detected - AI Study Circle",
+        "body": {
+          "html": "<h1>🔴 CRITICAL Security Alert</h1><p><strong>Threat Level:</strong> {{ctx.payload.severity}}</p><p><strong>Threat Count:</strong> {{ctx.payload.threat_count}} security events detected</p><p><strong>Average Risk Score:</strong> {{ctx.payload.avg_risk_score}}/10</p><p><strong>Maximum Risk Score:</strong> {{ctx.payload.max_risk_score}}/10</p><p><strong>Detection Time:</strong> {{ctx.payload.timestamp}}</p><h3>🌍 Threat Sources by Country:</h3><ul>{{#ctx.payload.threat_sources}}{{#.}}<li><strong>{{@key}}:</strong> {{count}} attacks (Avg Risk: {{avg_risk}}/10)</li>{{/.}}{{/ctx.payload.threat_sources}}</ul><h3>⚔️ Attack Types:</h3><ul>{{#ctx.payload.attack_types}}{{#.}}<li><strong>{{@key}}:</strong> {{.}} attempts</li>{{/.}}{{/ctx.payload.attack_types}}</ul><h3>🎯 Targeted Endpoints:</h3><ul>{{#ctx.payload.targeted_endpoints}}{{#.}}<li><strong>{{@key}}:</strong> {{.}} attacks</li>{{/.}}{{/ctx.payload.targeted_endpoints}}</ul><p><strong>🚨 IMMEDIATE ACTION REQUIRED:</strong></p><ul><li>Review <a href=\"http://localhost:5601/app/kibana#/dashboard/security-operations-center\">Security Operations Dashboard</a></li><li>Consider blocking suspicious IP addresses</li><li>Verify system integrity and check for compromises</li><li>Escalate to incident response team if necessary</li></ul>"
+        }
+      }
+    },
+    "security_webhook": {
+      "webhook": {
+        "scheme": "http",
+        "host": "localhost",
+        "port": 5000,
+        "method": "post",
+        "path": "/api/alerts/security",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": "{ \"alert_type\": \"security_threat\", \"severity\": \"{{ctx.payload.severity}}\", \"threat_count\": {{ctx.payload.threat_count}}, \"avg_risk_score\": {{ctx.payload.avg_risk_score}}, \"max_risk_score\": {{ctx.payload.max_risk_score}}, \"threat_sources\": {{#toJson}}ctx.payload.threat_sources{{/toJson}}, \"attack_types\": {{#toJson}}ctx.payload.attack_types{{/toJson}}, \"targeted_endpoints\": {{#toJson}}ctx.payload.targeted_endpoints{{/toJson}}, \"timestamp\": \"{{ctx.payload.timestamp}}\" }"
+      }
+    },
+    "security_log": {
+      "logging": {
+        "level": "error",
+        "text": "Security threat detected: {{ctx.payload.threat_count}} threats, severity={{ctx.payload.severity}}, max_risk={{ctx.payload.max_risk_score}}/10. Attack types: {{#ctx.payload.attack_types}}{{@key}}({{.}}) {{/ctx.payload.attack_types}}"
+      }
+    }
+  },
+  "throttle_period": "1m",
+  "metadata": {
+    "name": "Security Threat Monitor",
+    "description": "Monitors for security threats and attacks with real-time alerting",
+    "created_by": "AI Study Circle Security Team",
+    "version": "1.0.0",
+    "tags": ["security-monitoring", "threat-detection", "incident-response"]
+  }
+}

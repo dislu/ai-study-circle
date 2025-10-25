@@ -1,0 +1,55 @@
+# Elasticsearch Configuration for AI Study Circle
+# Optimized for single-node development and small production deployments
+
+# Cluster settings
+cluster.name: "ai-study-circle"
+node.name: "ai-study-node-1"
+node.roles: ["master", "data", "ingest"]
+
+# Network settings
+network.host: 0.0.0.0
+http.port: 9200
+transport.port: 9300
+
+# Discovery settings (single-node)
+discovery.type: single-node
+discovery.seed_hosts: []
+cluster.initial_master_nodes: []
+
+# Path settings
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+
+# Memory settings
+bootstrap.memory_lock: true
+
+# Security settings (disabled for development)
+xpack.security.enabled: false
+xpack.security.enrollment.enabled: false
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+# Monitoring settings
+xpack.monitoring.collection.enabled: true
+
+# Index settings
+action.auto_create_index: true
+action.destructive_requires_name: true
+
+# Performance settings
+indices.memory.index_buffer_size: 10%
+indices.memory.min_index_buffer_size: 48mb
+
+# HTTP settings
+http.compression: true
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+http.cors.allow-headers: "X-Requested-With,Content-Type,Content-Length,Authorization"
+
+# Thread pool settings
+thread_pool.write.queue_size: 1000
+thread_pool.search.queue_size: 1000
+
+# Logging
+logger.org.elasticsearch.discovery: WARN
+logger.org.elasticsearch.cluster.service: WARN

@@ -1,0 +1,158 @@
+{
+  "version": "8.11.0",
+  "objects": [
+    {
+      "id": "performance-analytics-dashboard",
+      "type": "dashboard",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "AI Study Circle - Performance Analytics Hub",
+        "hits": 0,
+        "description": "Comprehensive performance monitoring with Core Web Vitals, API analytics, and resource optimization insights",
+        "panelsJSON": "[{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":0,\"w\":12,\"h\":8,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{\"title\":\"Performance Score\"},\"panelRefName\":\"panel_1\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":12,\"y\":0,\"w\":12,\"h\":8,\"i\":\"2\"},\"panelIndex\":\"2\",\"embeddableConfig\":{\"title\":\"Core Web Vitals Status\"},\"panelRefName\":\"panel_2\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":0,\"w\":12,\"h\":8,\"i\":\"3\"},\"panelIndex\":\"3\",\"embeddableConfig\":{\"title\":\"API Response Times\"},\"panelRefName\":\"panel_3\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":36,\"y\":0,\"w\":12,\"h\":8,\"i\":\"4\"},\"panelIndex\":\"4\",\"embeddableConfig\":{\"title\":\"Database Query Performance\"},\"panelRefName\":\"panel_4\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":8,\"w\":24,\"h\":12,\"i\":\"5\"},\"panelIndex\":\"5\",\"embeddableConfig\":{\"title\":\"Performance Trends\"},\"panelRefName\":\"panel_5\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":8,\"w\":24,\"h\":12,\"i\":\"6\"},\"panelIndex\":\"6\",\"embeddableConfig\":{\"title\":\"Resource Usage Heatmap\"},\"panelRefName\":\"panel_6\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":20,\"w\":16,\"h\":10,\"i\":\"7\"},\"panelIndex\":\"7\",\"embeddableConfig\":{\"title\":\"Slowest Endpoints\"},\"panelRefName\":\"panel_7\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":16,\"y\":20,\"w\":16,\"h\":10,\"i\":\"8\"},\"panelIndex\":\"8\",\"embeddableConfig\":{\"title\":\"Memory & CPU Utilization\"},\"panelRefName\":\"panel_8\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":32,\"y\":20,\"w\":16,\"h\":10,\"i\":\"9\"},\"panelIndex\":\"9\",\"embeddableConfig\":{\"title\":\"Network Performance\"},\"panelRefName\":\"panel_9\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":30,\"w\":24,\"h\":8,\"i\":\"10\"},\"panelIndex\":\"10\",\"embeddableConfig\":{\"title\":\"Performance Anomalies\"},\"panelRefName\":\"panel_10\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":30,\"w\":24,\"h\":8,\"i\":\"11\"},\"panelIndex\":\"11\",\"embeddableConfig\":{\"title\":\"Page Load Metrics\"},\"panelRefName\":\"panel_11\"}]",
+        "timeRestore": false,
+        "timeTo": "now",
+        "timeFrom": "now-24h",
+        "refreshInterval": {
+          "pause": false,
+          "value": 10000
+        },
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"query\":\"\",\"language\":\"kuery\"},\"filter\":[]}"
+        }
+      },
+      "references": [
+        {
+          "name": "panel_1",
+          "type": "visualization",
+          "id": "performance-score-gauge"
+        },
+        {
+          "name": "panel_2",
+          "type": "visualization",
+          "id": "core-web-vitals-status"
+        },
+        {
+          "name": "panel_3",
+          "type": "visualization",
+          "id": "api-response-times"
+        },
+        {
+          "name": "panel_4",
+          "type": "visualization",
+          "id": "database-query-performance"
+        },
+        {
+          "name": "panel_5",
+          "type": "visualization",
+          "id": "performance-trends"
+        },
+        {
+          "name": "panel_6",
+          "type": "visualization",
+          "id": "resource-usage-heatmap"
+        },
+        {
+          "name": "panel_7",
+          "type": "visualization",
+          "id": "slowest-endpoints"
+        },
+        {
+          "name": "panel_8",
+          "type": "visualization",
+          "id": "memory-cpu-utilization"
+        },
+        {
+          "name": "panel_9",
+          "type": "visualization",
+          "id": "network-performance"
+        },
+        {
+          "name": "panel_10",
+          "type": "visualization",
+          "id": "performance-anomalies"
+        },
+        {
+          "name": "panel_11",
+          "type": "visualization",
+          "id": "page-load-metrics"
+        }
+      ]
+    },
+    {
+      "id": "performance-score-gauge",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Performance Score",
+        "visState": "{\"title\":\"Performance Score\",\"type\":\"gauge\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"performance.score\"},\"schema\":\"metric\"}],\"params\":{\"gauge\":{\"alignment\":\"automatic\",\"extendRange\":true,\"percentageMode\":false,\"gaugeType\":\"Arc\",\"gaugeStyle\":\"Full\",\"backStyle\":\"Full\",\"orientation\":\"vertical\",\"colorSchema\":\"Green to Red\",\"gaugeColorMode\":\"Labels\",\"colorsRange\":[{\"from\":0,\"to\":50},{\"from\":50,\"to\":80},{\"from\":80,\"to\":100}],\"invertColors\":false,\"labels\":{\"show\":true,\"color\":\"black\"},\"scale\":{\"show\":true,\"labels\":false,\"color\":\"#333\"},\"type\":\"meter\",\"style\":{\"bgFill\":\"#eee\",\"bgColor\":false,\"labelColor\":false,\"subText\":\"Overall Performance\",\"fontSize\":60}}}}",
+        "uiStateJSON": "{}",
+        "description": "Overall application performance score",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"performance.score\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "core-web-vitals-status",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Core Web Vitals Status",
+        "visState": "{\"title\":\"Core Web Vitals Status\",\"type\":\"table\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"performance.core_web_vitals.lcp\"},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"performance.core_web_vitals.fid\"},\"schema\":\"metric\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"performance.core_web_vitals.cls\"},\"schema\":\"metric\"},{\"id\":\"4\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"page_url.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":10,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"bucket\"}],\"params\":{\"perPage\":10,\"showPartialRows\":false,\"showMetricsAtAllLevels\":false,\"sort\":{\"columnIndex\":null,\"direction\":null},\"showTotal\":false,\"totalFunc\":\"sum\",\"percentageCol\":\"\"}}",
+        "uiStateJSON": "{}",
+        "description": "Core Web Vitals metrics by page",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"bool\":{\"must\":[{\"exists\":{\"field\":\"performance.core_web_vitals\"}}]}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "api-response-times",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "API Response Times",
+        "visState": "{\"title\":\"API Response Times\",\"type\":\"histogram\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"response_time\"},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"endpoint.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":10,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"segment\"}],\"params\":{\"grid\":{\"categoryLines\":false,\"valueAxis\":\"ValueAxis-1\"},\"categoryAxes\":[{\"id\":\"CategoryAxis-1\",\"type\":\"category\",\"position\":\"bottom\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\"},\"labels\":{\"show\":true,\"truncate\":100},\"title\":{}}],\"valueAxes\":[{\"id\":\"ValueAxis-1\",\"name\":\"LeftAxis-1\",\"type\":\"value\",\"position\":\"left\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\",\"mode\":\"normal\"},\"labels\":{\"show\":true,\"rotate\":0,\"filter\":false,\"truncate\":100},\"title\":{\"text\":\"Response Time (ms)\"}}],\"seriesParams\":[{\"show\":true,\"type\":\"histogram\",\"mode\":\"normal\",\"data\":{\"label\":\"Average response_time\",\"id\":\"1\"},\"valueAxis\":\"ValueAxis-1\",\"drawLinesBetweenPoints\":true,\"lineWidth\":2,\"showCircles\":true}],\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"times\":[],\"addTimeMarker\":false,\"thresholdLine\":{\"show\":true,\"value\":1000,\"width\":1,\"style\":\"full\",\"color\":\"#E7664C\"}}}",
+        "uiStateJSON": "{}",
+        "description": "Average response times by API endpoint",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"bool\":{\"must\":[{\"exists\":{\"field\":\"response_time\"}},{\"exists\":{\"field\":\"endpoint\"}}]}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "database-query-performance",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Database Query Performance",
+        "visState": "{\"title\":\"Database Query Performance\",\"type\":\"metric\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"performance.database.query_time\"},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"max\",\"params\":{\"field\":\"performance.database.query_time\"},\"schema\":\"metric\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"}],\"params\":{\"addTooltip\":true,\"addLegend\":false,\"type\":\"metric\",\"metric\":{\"percentageMode\":false,\"useRanges\":true,\"colorSchema\":\"Red to Green\",\"metricColorMode\":\"Background\",\"colorsRange\":[{\"from\":0,\"to\":100},{\"from\":100,\"to\":500},{\"from\":500,\"to\":2000}],\"labels\":{\"show\":true},\"invertColors\":true,\"style\":{\"bgFill\":\"#000\",\"bgColor\":false,\"labelColor\":false,\"subText\":\"Avg Query Time (ms)\",\"fontSize\":40}}}}",
+        "uiStateJSON": "{}",
+        "description": "Database query performance metrics",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"performance.database.query_time\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "performance-trends",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Performance Trends",
+        "visState": "{\"title\":\"Performance Trends\",\"type\":\"line\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"performance.score\"},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"response_time\"},\"schema\":\"metric\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"date_histogram\",\"params\":{\"field\":\"@timestamp\",\"timeRange\":{\"from\":\"now-24h\",\"to\":\"now\"},\"useNormalizedEsInterval\":true,\"scaleMetricValues\":false,\"interval\":\"auto\",\"drop_partials\":false,\"min_doc_count\":1,\"extended_bounds\":{}},\"schema\":\"segment\"}],\"params\":{\"grid\":{\"categoryLines\":false,\"valueAxis\":\"ValueAxis-1\"},\"categoryAxes\":[{\"id\":\"CategoryAxis-1\",\"type\":\"category\",\"position\":\"bottom\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\"},\"labels\":{\"show\":true,\"truncate\":100},\"title\":{}}],\"valueAxes\":[{\"id\":\"ValueAxis-1\",\"name\":\"LeftAxis-1\",\"type\":\"value\",\"position\":\"left\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\",\"mode\":\"normal\"},\"labels\":{\"show\":true,\"rotate\":0,\"filter\":false,\"truncate\":100},\"title\":{\"text\":\"Performance Score\"}},{\"id\":\"ValueAxis-2\",\"name\":\"RightAxis-1\",\"type\":\"value\",\"position\":\"right\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\",\"mode\":\"normal\"},\"labels\":{\"show\":true,\"rotate\":0,\"filter\":false,\"truncate\":100},\"title\":{\"text\":\"Response Time (ms)\"}}],\"seriesParams\":[{\"show\":true,\"type\":\"line\",\"mode\":\"normal\",\"data\":{\"label\":\"Avg Performance Score\",\"id\":\"1\"},\"valueAxis\":\"ValueAxis-1\",\"drawLinesBetweenPoints\":true,\"lineWidth\":2,\"showCircles\":true},{\"show\":true,\"type\":\"line\",\"mode\":\"normal\",\"data\":{\"label\":\"Avg Response Time\",\"id\":\"2\"},\"valueAxis\":\"ValueAxis-2\",\"drawLinesBetweenPoints\":true,\"lineWidth\":2,\"showCircles\":true}],\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"times\":[],\"addTimeMarker\":false,\"thresholdLine\":{\"show\":false,\"value\":10,\"width\":1,\"style\":\"full\",\"color\":\"#E7664C\"}}}",
+        "uiStateJSON": "{}",
+        "description": "Performance score and response time trends over time",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"bool\":{\"should\":[{\"exists\":{\"field\":\"performance.score\"}},{\"exists\":{\"field\":\"response_time\"}}]}},\"filter\":[]}"
+        }
+      }
+    }
+  ]
+}

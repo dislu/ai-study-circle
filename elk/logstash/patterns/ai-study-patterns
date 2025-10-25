@@ -1,0 +1,85 @@
+# AI Study Circle Custom Grok Patterns
+# These patterns help parse various log formats used in the application
+
+# Basic patterns
+AISTUDYDATE %{YEAR:year}[/-]%{MONTHNUM:month}[/-]%{MONTHDAY:day}[T ]%{HOUR:hour}:?%{MINUTE:minute}(?::?%{SECOND:second})?%{ISO8601_TIMEZONE}?
+AISTUDYLEVEL (TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|trace|debug|info|warn|warning|error|fatal)
+AISTUDYSERVICE (backend|frontend|auth|ai|translation|unknown)
+
+# HTTP patterns
+AISTUDYMETHOD (GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)
+AISTUDYURL (?<url>/[^\s]*)
+AISTUDYSTATUS %{INT:status_code}
+AISTUDYRESPONSE_TIME %{NUMBER:response_time:float}
+
+# User patterns  
+AISTUDYUSERID (?<user_id>[a-zA-Z0-9_-]+)
+AISTUDYSESSIONID (?<session_id>[a-zA-Z0-9_-]+)
+AISTUDYIP (?<client_ip>%{IPV4}|%{IPV6})
+
+# Error patterns
+AISTUDYERROR_NAME (?<error_name>[a-zA-Z][a-zA-Z0-9]*Error)
+AISTUDYSTACK_TRACE (?<stack_trace>(?:\s+at .+\n?)+)
+
+# Performance patterns
+AISTUDYLCP %{NUMBER:lcp:float}
+AISTUDYFID %{NUMBER:fid:float}  
+AISTUDYCLS %{NUMBER:cls:float}
+AISTUDYMEMORY %{NUMBER:memory_used:int}
+
+# Action patterns
+AISTUDYACTION (page_view|click|form_submit|search|navigation|error|api_call)
+AISTUDYPAGE (?<page>/[^\s?]*)
+
+# Translation patterns
+AISTUDYLANG (en|hi|bn|te|mr|ta|gu|kn|ml|pa|or|as|ur|ne|si|my)
+AISTUDYTRANSLATION_TYPE (detect|translate|transliterate)
+
+# AI patterns  
+AISTUDYAI_MODEL (gpt-3.5-turbo|gpt-4|claude|gemini)
+AISTUDYAI_TOKENS %{NUMBER:tokens_used:int}
+AISTUDYAI_COST %{NUMBER:cost:float}
+
+# Application-specific patterns
+AISTUDYREQUEST \[%{AISTUDYDATE:timestamp}\] %{AISTUDYLEVEL:level} %{AISTUDYMETHOD:method} %{AISTUDYURL:url} %{AISTUDYSTATUS:status_code} %{AISTUDYRESPONSE_TIME:response_time}ms
+AISTUDYAUTH \[%{AISTUDYDATE:timestamp}\] %{AISTUDYLEVEL:level} AUTH: (?<auth_event>login|logout|register|token_refresh) user=%{AISTUDYUSERID:user_id} ip=%{AISTUDYIP:client_ip} result=(?<auth_result>success|failure)
+AISTUDYERROR_LOG \[%{AISTUDYDATE:timestamp}\] %{AISTUDYLEVEL:level} ERROR: %{AISTUDYERROR_NAME:error_name}: (?<error_message>.*?)(?:\n%{AISTUDYSTACK_TRACE:stack_trace})?
+AISTUDYPERFORMANCE \[%{AISTUDYDATE:timestamp}\] %{AISTUDYLEVEL:level} PERF: page=%{AISTUDYPAGE:page} lcp=%{AISTUDYLCP:lcp} fid=%{AISTUDYFID:fid} cls=%{AISTUDYCLS:cls}
+AISTUDYUSER_ACTION \[%{AISTUDYDATE:timestamp}\] %{AISTUDYLEVEL:level} USER: action=%{AISTUDYACTION:action} user=%{AISTUDYUSERID:user_id} session=%{AISTUDYSESSIONID:session_id} page=%{AISTUDYPAGE:page}
+
+# Complete log line patterns
+AISTUDYBACKEND_LOG %{AISTUDYDATE:timestamp} \[%{AISTUDYSERVICE:service}\] %{AISTUDYLEVEL:level}: (?<message>.*)
+AISTUDYFRONTEND_LOG %{AISTUDYDATE:timestamp} \[frontend\] %{AISTUDYLEVEL:level}: (?<message>.*)
+
+# JSON log patterns (for structured logs)
+AISTUDYJSON_LOG %{AISTUDYDATE:timestamp} %{AISTUDYLEVEL:level} %{GREEDYDATA:json_content}
+
+# Docker log patterns
+AISTUDYDOCKER_LOG %{AISTUDYDATE:timestamp} %{WORD:container_name}\[%{INT:container_id}\]: %{GREEDYDATA:log_content}
+
+# Nginx/Apache style patterns (if using reverse proxy)
+AISTUDYACCESS_LOG %{AISTUDYIP:client_ip} - - \[%{HTTPDATE:timestamp}\] "%{AISTUDYMETHOD:method} %{AISTUDYURL:url} HTTP/%{NUMBER:http_version}" %{AISTUDYSTATUS:status_code} %{NUMBER:bytes_sent} "%{DATA:referrer}" "%{DATA:user_agent}"
+
+# API-specific patterns
+AISTUDYAPI_CALL %{AISTUDYDATE:timestamp} API: %{AISTUDYMETHOD:method} %{AISTUDYURL:endpoint} user=%{AISTUDYUSERID:user_id} status=%{AISTUDYSTATUS:status_code} time=%{AISTUDYRESPONSE_TIME:response_time}ms
+
+# Translation service patterns
+AISTUDYTRANSLATE_LOG %{AISTUDYDATE:timestamp} TRANSLATE: type=%{AISTUDYTRANSLATION_TYPE:translation_type} from=%{AISTUDYLANG:source_lang} to=%{AISTUDYLANG:target_lang} chars=%{NUMBER:char_count:int} time=%{AISTUDYRESPONSE_TIME:processing_time}ms
+
+# AI service patterns  
+AISTUDYAI_LOG %{AISTUDYDATE:timestamp} AI: model=%{AISTUDYAI_MODEL:ai_model} tokens=%{AISTUDYAI_TOKENS:tokens_used} cost=%{AISTUDYAI_COST:estimated_cost} time=%{AISTUDYRESPONSE_TIME:processing_time}ms
+
+# Security patterns
+AISTUDYSECURITY_LOG %{AISTUDYDATE:timestamp} SECURITY: event=(?<security_event>\w+) severity=(?<severity>low|medium|high|critical) ip=%{AISTUDYIP:client_ip} user=%{AISTUDYUSERID:user_id} details=(?<security_details>.*)
+
+# Performance monitoring patterns
+AISTUDYMETRICS_LOG %{AISTUDYDATE:timestamp} METRICS: cpu=%{NUMBER:cpu_usage:float}% memory=%{AISTUDYMEMORY:memory_usage}MB disk=%{NUMBER:disk_usage:float}% active_users=%{NUMBER:active_users:int}
+
+# Session patterns
+AISTUDYSESSION_LOG %{AISTUDYDATE:timestamp} SESSION: event=(?<session_event>start|end|timeout) session=%{AISTUDYSESSIONID:session_id} user=%{AISTUDYUSERID:user_id} duration=%{NUMBER:session_duration:int}ms
+
+# Rate limiting patterns
+AISTUDYRATELIMIT_LOG %{AISTUDYDATE:timestamp} RATELIMIT: ip=%{AISTUDYIP:client_ip} endpoint=%{AISTUDYURL:endpoint} limit_type=(?<limit_type>\w+) current=%{NUMBER:current_requests:int} max=%{NUMBER:max_requests:int}
+
+# Database patterns (if logging DB queries)
+AISTUDYDB_LOG %{AISTUDYDATE:timestamp} DB: operation=(?<db_operation>SELECT|INSERT|UPDATE|DELETE) table=(?<table_name>\w+) duration=%{AISTUDYRESPONSE_TIME:query_time}ms rows=%{NUMBER:affected_rows:int}

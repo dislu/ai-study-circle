@@ -1,0 +1,108 @@
+{
+  "version": "8.11.0",
+  "objects": [
+    {
+      "id": "performance-dashboard",
+      "type": "dashboard",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "AI Study Circle - Performance Metrics",
+        "hits": 0,
+        "description": "Application performance monitoring and web vitals",
+        "panelsJSON": "[{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":0,\"w\":24,\"h\":15,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{},\"panelRefName\":\"panel_1\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":0,\"w\":24,\"h\":15,\"i\":\"2\"},\"panelIndex\":\"2\",\"embeddableConfig\":{},\"panelRefName\":\"panel_2\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":15,\"w\":24,\"h\":15,\"i\":\"3\"},\"panelIndex\":\"3\",\"embeddableConfig\":{},\"panelRefName\":\"panel_3\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":15,\"w\":24,\"h\":15,\"i\":\"4\"},\"panelIndex\":\"4\",\"embeddableConfig\":{},\"panelRefName\":\"panel_4\"}]",
+        "timeRestore": false,
+        "timeTo": "now",
+        "timeFrom": "now-24h",
+        "refreshInterval": {
+          "pause": false,
+          "value": 60000
+        },
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"query\":\"\",\"language\":\"kuery\"},\"filter\":[]}"
+        }
+      },
+      "references": [
+        {
+          "name": "panel_1",
+          "type": "visualization",
+          "id": "response-time-histogram"
+        },
+        {
+          "name": "panel_2",
+          "type": "visualization",
+          "id": "web-vitals-metrics"
+        },
+        {
+          "name": "panel_3",
+          "type": "visualization",
+          "id": "api-performance-table"
+        },
+        {
+          "name": "panel_4",
+          "type": "visualization",
+          "id": "memory-usage-timeline"
+        }
+      ]
+    },
+    {
+      "id": "response-time-histogram",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "API Response Times",
+        "visState": "{\"title\":\"API Response Times\",\"type\":\"histogram\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"responseTime\"},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"params\":{\"field\":\"@timestamp\",\"timeRange\":{\"from\":\"now-24h\",\"to\":\"now\"},\"useNormalizedEsInterval\":true,\"scaleMetricValues\":false,\"interval\":\"auto\",\"drop_partials\":false,\"min_doc_count\":1,\"extended_bounds\":{}},\"schema\":\"segment\"}]}",
+        "uiStateJSON": "{}",
+        "description": "",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"responseTime\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "web-vitals-metrics",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Web Vitals Metrics",
+        "visState": "{\"title\":\"Web Vitals Metrics\",\"type\":\"metric\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"performance.lcp\"},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"performance.fid\"},\"schema\":\"metric\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"performance.cls\"},\"schema\":\"metric\"}]}",
+        "uiStateJSON": "{}",
+        "description": "",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"performance\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "api-performance-table",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "API Performance by Endpoint",
+        "visState": "{\"title\":\"API Performance by Endpoint\",\"type\":\"table\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"responseTime\"},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"url.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":10,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"bucket\"}]}",
+        "uiStateJSON": "{}",
+        "description": "",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"responseTime\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "memory-usage-timeline",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Memory Usage Over Time",
+        "visState": "{\"title\":\"Memory Usage Over Time\",\"type\":\"line\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"performance.memory.usedJSHeapSize\"},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"params\":{\"field\":\"@timestamp\",\"timeRange\":{\"from\":\"now-24h\",\"to\":\"now\"},\"useNormalizedEsInterval\":true,\"scaleMetricValues\":false,\"interval\":\"auto\",\"drop_partials\":false,\"min_doc_count\":1,\"extended_bounds\":{}},\"schema\":\"segment\"}]}",
+        "uiStateJSON": "{}",
+        "description": "",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"performance.memory\"}},\"filter\":[]}"
+        }
+      }
+    }
+  ]
+}

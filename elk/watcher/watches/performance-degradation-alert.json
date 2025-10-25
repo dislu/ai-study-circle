@@ -1,0 +1,133 @@
+{
+  "trigger": {
+    "schedule": {
+      "interval": "30s"
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "search_type": "query_then_fetch",
+        "indices": ["ai-study-logs-*"],
+        "rest_total_hits_as_int": true,
+        "body": {
+          "query": {
+            "bool": {
+              "must": [
+                {
+                  "exists": {
+                    "field": "response_time"
+                  }
+                },
+                {
+                  "range": {
+                    "@timestamp": {
+                      "gte": "now-2m"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "aggs": {
+            "avg_response_time": {
+              "avg": {
+                "field": "response_time"
+              }
+            },
+            "max_response_time": {
+              "max": {
+                "field": "response_time"
+              }
+            },
+            "slow_endpoints": {
+              "terms": {
+                "field": "endpoint.keyword",
+                "size": 5,
+                "order": {
+                  "avg_response": "desc"
+                }
+              },
+              "aggs": {
+                "avg_response": {
+                  "avg": {
+                    "field": "response_time"
+                  }
+                }
+              }
+            },
+            "performance_percentiles": {
+              "percentiles": {
+                "field": "response_time",
+                "percents": [90, 95, 99]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "script": {
+      "source": "def avg_response = ctx.payload.aggregations.avg_response_time.value; def max_response = ctx.payload.aggregations.max_response_time.value; def p95_response = ctx.payload.aggregations.performance_percentiles.values['95.0']; return avg_response > 2000 || max_response > 10000 || p95_response > 5000;"
+    }
+  },
+  "transform": {
+    "script": {
+      "source": "def avg_response = Math.round(ctx.payload.aggregations.avg_response_time.value); def max_response = Math.round(ctx.payload.aggregations.max_response_time.value); def p95_response = Math.round(ctx.payload.aggregations.performance_percentiles.values['95.0']); def slow_endpoints = [:]; for (bucket in ctx.payload.aggregations.slow_endpoints.buckets) { slow_endpoints[bucket.key] = Math.round(bucket.avg_response.value); } def severity = 'medium'; if (avg_response > 5000 || max_response > 15000) { severity = 'high'; } if (avg_response > 10000 || max_response > 30000) { severity = 'critical'; } return ['avg_response_time': avg_response, 'max_response_time': max_response, 'p95_response_time': p95_response, 'slow_endpoints': slow_endpoints, 'severity': severity, 'timestamp': ctx.trigger.triggered_time];"
+    }
+  },
+  "actions": {
+    "performance_alert": {
+      "condition": {
+        "compare": {
+          "ctx.payload.severity": {
+            "eq": "critical"
+          }
+        }
+      },
+      "email": {
+        "profile": "standard",
+        "to": ["performance@ai-study-circle.com", "devops@ai-study-circle.com"],
+        "subject": "🐌 Critical Performance Degradation - AI Study Circle",
+        "body": {
+          "html": "<h2>🐌 Critical Performance Alert</h2><p><strong>Severity:</strong> {{ctx.payload.severity}}</p><p><strong>Average Response Time:</strong> {{ctx.payload.avg_response_time}}ms</p><p><strong>Max Response Time:</strong> {{ctx.payload.max_response_time}}ms</p><p><strong>95th Percentile:</strong> {{ctx.payload.p95_response_time}}ms</p><p><strong>Triggered At:</strong> {{ctx.payload.timestamp}}</p><h3>🐌 Slowest Endpoints:</h3><ul>{{#ctx.payload.slow_endpoints}}{{#.}}<li><strong>{{@key}}:</strong> {{.}}ms average</li>{{/.}}{{/ctx.payload.slow_endpoints}}</ul><p><strong>Immediate Action Required:</strong> Check the <a href=\"http://localhost:5601/app/kibana#/dashboard/performance-analytics-dashboard\">Performance Dashboard</a> and investigate server resources.</p>"
+        }
+      }
+    },
+    "performance_warning": {
+      "condition": {
+        "compare": {
+          "ctx.payload.severity": {
+            "eq": "high"
+          }
+        }
+      },
+      "webhook": {
+        "scheme": "http",
+        "host": "localhost",
+        "port": 5000,
+        "method": "post",
+        "path": "/api/alerts/performance",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": "{ \"alert_type\": \"performance_degradation\", \"severity\": \"{{ctx.payload.severity}}\", \"avg_response_time\": {{ctx.payload.avg_response_time}}, \"max_response_time\": {{ctx.payload.max_response_time}}, \"p95_response_time\": {{ctx.payload.p95_response_time}}, \"slow_endpoints\": {{#toJson}}ctx.payload.slow_endpoints{{/toJson}}, \"timestamp\": \"{{ctx.payload.timestamp}}\" }"
+      }
+    },
+    "log_performance": {
+      "logging": {
+        "level": "warn",
+        "text": "Performance degradation detected: Avg={{ctx.payload.avg_response_time}}ms, Max={{ctx.payload.max_response_time}}ms, P95={{ctx.payload.p95_response_time}}ms, Severity={{ctx.payload.severity}}"
+      }
+    }
+  },
+  "throttle_period": "2m",
+  "metadata": {
+    "name": "Performance Degradation Monitor",
+    "description": "Monitors application response times and alerts on performance degradation",
+    "created_by": "AI Study Circle Performance Team",
+    "version": "1.0.0",
+    "tags": ["performance-monitoring", "response-time", "sla-monitoring"]
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "version": "8.11.0",
+  "objects": [
+    {
+      "id": "application-health-dashboard",
+      "type": "dashboard",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "AI Study Circle - Application Health & Monitoring",
+        "hits": 0,
+        "description": "Comprehensive application health monitoring with real-time metrics, error tracking, and performance indicators",
+        "panelsJSON": "[{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":0,\"w\":12,\"h\":8,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{\"title\":\"System Health Score\"},\"panelRefName\":\"panel_1\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":12,\"y\":0,\"w\":12,\"h\":8,\"i\":\"2\"},\"panelIndex\":\"2\",\"embeddableConfig\":{\"title\":\"Error Rate Trend\"},\"panelRefName\":\"panel_2\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":0,\"w\":12,\"h\":8,\"i\":\"3\"},\"panelIndex\":\"3\",\"embeddableConfig\":{\"title\":\"Service Status Grid\"},\"panelRefName\":\"panel_3\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":36,\"y\":0,\"w\":12,\"h\":8,\"i\":\"4\"},\"panelIndex\":\"4\",\"embeddableConfig\":{\"title\":\"Response Time Heatmap\"},\"panelRefName\":\"panel_4\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":8,\"w\":24,\"h\":12,\"i\":\"5\"},\"panelIndex\":\"5\",\"embeddableConfig\":{\"title\":\"Real-time Log Stream\"},\"panelRefName\":\"panel_5\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":8,\"w\":24,\"h\":12,\"i\":\"6\"},\"panelIndex\":\"6\",\"embeddableConfig\":{\"title\":\"Critical Alerts Timeline\"},\"panelRefName\":\"panel_6\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":20,\"w\":16,\"h\":10,\"i\":\"7\"},\"panelIndex\":\"7\",\"embeddableConfig\":{\"title\":\"API Endpoint Performance\"},\"panelRefName\":\"panel_7\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":16,\"y\":20,\"w\":16,\"h\":10,\"i\":\"8\"},\"panelIndex\":\"8\",\"embeddableConfig\":{\"title\":\"Database Query Analysis\"},\"panelRefName\":\"panel_8\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":32,\"y\":20,\"w\":16,\"h\":10,\"i\":\"9\"},\"panelIndex\":\"9\",\"embeddableConfig\":{\"title\":\"Memory & CPU Usage\"},\"panelRefName\":\"panel_9\"}]",
+        "timeRestore": false,
+        "timeTo": "now",
+        "timeFrom": "now-1h",
+        "refreshInterval": {
+          "pause": false,
+          "value": 10000
+        },
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"query\":\"\",\"language\":\"kuery\"},\"filter\":[]}"
+        }
+      },
+      "references": [
+        {
+          "name": "panel_1",
+          "type": "visualization",
+          "id": "system-health-score-gauge"
+        },
+        {
+          "name": "panel_2",
+          "type": "visualization", 
+          "id": "error-rate-trend-area"
+        },
+        {
+          "name": "panel_3",
+          "type": "visualization",
+          "id": "service-status-grid"
+        },
+        {
+          "name": "panel_4",
+          "type": "visualization",
+          "id": "response-time-heatmap"
+        },
+        {
+          "name": "panel_5",
+          "type": "visualization",
+          "id": "realtime-log-stream"
+        },
+        {
+          "name": "panel_6",
+          "type": "visualization",
+          "id": "critical-alerts-timeline"
+        },
+        {
+          "name": "panel_7",
+          "type": "visualization",
+          "id": "api-endpoint-performance"
+        },
+        {
+          "name": "panel_8",
+          "type": "visualization",
+          "id": "database-query-analysis"
+        },
+        {
+          "name": "panel_9",
+          "type": "visualization",
+          "id": "memory-cpu-usage"
+        }
+      ]
+    },
+    {
+      "id": "system-health-score-gauge",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "System Health Score",
+        "visState": "{\"title\":\"System Health Score\",\"type\":\"gauge\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"performance.web_vitals_score\"},\"schema\":\"metric\"}],\"params\":{\"gauge\":{\"alignment\":\"automatic\",\"extendRange\":true,\"percentageMode\":false,\"gaugeType\":\"Arc\",\"gaugeStyle\":\"Full\",\"backStyle\":\"Full\",\"orientation\":\"vertical\",\"colorSchema\":\"Green to Red\",\"gaugeColorMode\":\"Labels\",\"colorsRange\":[{\"from\":0,\"to\":50},{\"from\":50,\"to\":75},{\"from\":75,\"to\":100}],\"invertColors\":false,\"labels\":{\"show\":true,\"color\":\"black\"},\"scale\":{\"show\":true,\"labels\":false,\"color\":\"#333\"},\"type\":\"meter\",\"style\":{\"bgFill\":\"#eee\",\"bgColor\":false,\"labelColor\":false,\"subText\":\"\",\"fontSize\":60}}}}",
+        "uiStateJSON": "{}",
+        "description": "Overall system health based on performance metrics, error rates, and response times",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"match_all\":{}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "error-rate-trend-area",
+      "type": "visualization", 
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Error Rate Trend",
+        "visState": "{\"title\":\"Error Rate Trend\",\"type\":\"area\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"params\":{\"field\":\"@timestamp\",\"timeRange\":{\"from\":\"now-1h\",\"to\":\"now\"},\"useNormalizedEsInterval\":true,\"scaleMetricValues\":false,\"interval\":\"auto\",\"drop_partials\":false,\"min_doc_count\":1,\"extended_bounds\":{}},\"schema\":\"segment\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"level.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":5,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"group\"}],\"params\":{\"grid\":{\"categoryLines\":false,\"valueAxis\":\"ValueAxis-1\"},\"categoryAxes\":[{\"id\":\"CategoryAxis-1\",\"type\":\"category\",\"position\":\"bottom\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\"},\"labels\":{\"show\":true,\"truncate\":100},\"title\":{}}],\"valueAxes\":[{\"id\":\"ValueAxis-1\",\"name\":\"LeftAxis-1\",\"type\":\"value\",\"position\":\"left\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\",\"mode\":\"normal\"},\"labels\":{\"show\":true,\"rotate\":0,\"filter\":false,\"truncate\":100},\"title\":{\"text\":\"Count\"}}],\"seriesParams\":[{\"show\":true,\"type\":\"area\",\"mode\":\"stacked\",\"data\":{\"label\":\"Count\",\"id\":\"1\"},\"valueAxis\":\"ValueAxis-1\",\"drawLinesBetweenPoints\":true,\"lineWidth\":2,\"showCircles\":true}],\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"times\":[],\"addTimeMarker\":false,\"thresholdLine\":{\"show\":false,\"value\":10,\"width\":1,\"style\":\"full\",\"color\":\"#E7664C\"}}}",
+        "uiStateJSON": "{}",
+        "description": "Error rate trends over time by log level",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"bool\":{\"should\":[{\"match\":{\"level\":\"error\"}},{\"match\":{\"level\":\"ERROR\"}},{\"match\":{\"level\":\"warn\"}},{\"match\":{\"level\":\"WARN\"}}]}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "service-status-grid",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Service Status Grid",
+        "visState": "{\"title\":\"Service Status Grid\",\"type\":\"tile_map\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"service.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":10,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"segment\"}],\"params\":{\"colorSchema\":\"Yellow to Red\",\"mapType\":\"Scaled Circle Markers\",\"isDesaturated\":true,\"addTooltip\":true,\"heatClusterSize\":1.5,\"legendPosition\":\"bottomright\",\"mapZoom\":2,\"mapCenter\":[0,0],\"wms\":{\"enabled\":false,\"options\":{\"format\":\"image/png\",\"transparent\":true}}}}",
+        "uiStateJSON": "{}",
+        "description": "Service health status visualization",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"match_all\":{}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "response-time-heatmap",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Response Time Heatmap",
+        "visState": "{\"title\":\"Response Time Heatmap\",\"type\":\"heatmap\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"responseTime\"},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"params\":{\"field\":\"@timestamp\",\"timeRange\":{\"from\":\"now-1h\",\"to\":\"now\"},\"useNormalizedEsInterval\":true,\"scaleMetricValues\":false,\"interval\":\"auto\",\"drop_partials\":false,\"min_doc_count\":1,\"extended_bounds\":{}},\"schema\":\"segment\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"url.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":10,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"group\"}],\"params\":{\"addTooltip\":true,\"addLegend\":true,\"enableHover\":false,\"legendPosition\":\"right\",\"times\":[],\"colorsNumber\":4,\"colorSchema\":\"Reds\",\"setColorRange\":false,\"colorsRange\":[],\"invertColors\":false,\"percentageMode\":false,\"valueAxes\":[{\"show\":false,\"id\":\"ValueAxis-1\",\"type\":\"value\",\"scale\":{\"type\":\"linear\",\"defaultYExtents\":false},\"labels\":{\"show\":false,\"rotate\":0,\"color\":\"#555\"}}]}}",
+        "uiStateJSON": "{}",
+        "description": "API response time heatmap by endpoint and time",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"responseTime\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "realtime-log-stream",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Real-time Log Stream",
+        "visState": "{\"title\":\"Real-time Log Stream\",\"type\":\"table\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"params\":{\"field\":\"@timestamp\",\"timeRange\":{\"from\":\"now-5m\",\"to\":\"now\"},\"useNormalizedEsInterval\":true,\"scaleMetricValues\":false,\"interval\":\"10s\",\"drop_partials\":false,\"min_doc_count\":1,\"extended_bounds\":{}},\"schema\":\"bucket\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"level.keyword\",\"orderBy\":\"2\",\"order\":\"desc\",\"size\":5,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"bucket\"},{\"id\":\"4\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"service.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":5,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"bucket\"},{\"id\":\"5\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"message.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":3,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"bucket\"}],\"params\":{\"perPage\":10,\"showPartialRows\":false,\"showMetricsAtAllLevels\":false,\"showTotal\":false,\"totalFunc\":\"sum\",\"percentageCol\":\"\"}}",
+        "uiStateJSON": "{}",
+        "description": "Live stream of recent log entries",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"match_all\":{}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "critical-alerts-timeline",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Critical Alerts Timeline",
+        "visState": "{\"title\":\"Critical Alerts Timeline\",\"type\":\"line\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"params\":{\"field\":\"@timestamp\",\"timeRange\":{\"from\":\"now-1h\",\"to\":\"now\"},\"useNormalizedEsInterval\":true,\"scaleMetricValues\":false,\"interval\":\"auto\",\"drop_partials\":false,\"min_doc_count\":1,\"extended_bounds\":{}},\"schema\":\"segment\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"tags\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":5,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"group\"}],\"params\":{\"grid\":{\"categoryLines\":false,\"valueAxis\":\"ValueAxis-1\"},\"categoryAxes\":[{\"id\":\"CategoryAxis-1\",\"type\":\"category\",\"position\":\"bottom\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\"},\"labels\":{\"show\":true,\"truncate\":100},\"title\":{}}],\"valueAxes\":[{\"id\":\"ValueAxis-1\",\"name\":\"LeftAxis-1\",\"type\":\"value\",\"position\":\"left\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\",\"mode\":\"normal\"},\"labels\":{\"show\":true,\"rotate\":0,\"filter\":false,\"truncate\":100},\"title\":{\"text\":\"Count\"}}],\"seriesParams\":[{\"show\":true,\"type\":\"line\",\"mode\":\"normal\",\"data\":{\"label\":\"Count\",\"id\":\"1\"},\"valueAxis\":\"ValueAxis-1\",\"drawLinesBetweenPoints\":true,\"lineWidth\":2,\"showCircles\":true}],\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"times\":[],\"addTimeMarker\":false,\"thresholdLine\":{\"show\":true,\"value\":10,\"width\":1,\"style\":\"full\",\"color\":\"#E7664C\"}}}",
+        "uiStateJSON": "{}",
+        "description": "Timeline of critical alerts and events",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"bool\":{\"should\":[{\"terms\":{\"tags\":[\"critical\",\"security_alert\",\"performance_issue\"]}}]}},\"filter\":[]}"
+        }
+      }
+    }
+  ]
+}

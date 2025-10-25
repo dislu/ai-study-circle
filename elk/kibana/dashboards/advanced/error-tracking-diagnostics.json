@@ -1,0 +1,173 @@
+{
+  "version": "8.11.0",
+  "objects": [
+    {
+      "id": "error-tracking-dashboard",
+      "type": "dashboard",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "AI Study Circle - Error Tracking & Diagnostics",
+        "hits": 0,
+        "description": "Comprehensive error monitoring with real-time alerts, error rate analysis, and diagnostic insights",
+        "panelsJSON": "[{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":0,\"w\":12,\"h\":8,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{\"title\":\"Error Rate\"},\"panelRefName\":\"panel_1\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":12,\"y\":0,\"w\":12,\"h\":8,\"i\":\"2\"},\"panelIndex\":\"2\",\"embeddableConfig\":{\"title\":\"Critical Error Count\"},\"panelRefName\":\"panel_2\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":0,\"w\":12,\"h\":8,\"i\":\"3\"},\"panelIndex\":\"3\",\"embeddableConfig\":{\"title\":\"Error by Severity\"},\"panelRefName\":\"panel_3\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":36,\"y\":0,\"w\":12,\"h\":8,\"i\":\"4\"},\"panelIndex\":\"4\",\"embeddableConfig\":{\"title\":\"Mean Time to Resolution\"},\"panelRefName\":\"panel_4\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":8,\"w\":24,\"h\":12,\"i\":\"5\"},\"panelIndex\":\"5\",\"embeddableConfig\":{\"title\":\"Error Trend Analysis\"},\"panelRefName\":\"panel_5\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":8,\"w\":24,\"h\":12,\"i\":\"6\"},\"panelIndex\":\"6\",\"embeddableConfig\":{\"title\":\"Error Distribution by Service\"},\"panelRefName\":\"panel_6\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":20,\"w\":16,\"h\":10,\"i\":\"7\"},\"panelIndex\":\"7\",\"embeddableConfig\":{\"title\":\"Top Error Messages\"},\"panelRefName\":\"panel_7\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":16,\"y\":20,\"w\":16,\"h\":10,\"i\":\"8\"},\"panelIndex\":\"8\",\"embeddableConfig\":{\"title\":\"Error Frequency by Endpoint\"},\"panelRefName\":\"panel_8\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":32,\"y\":20,\"w\":16,\"h\":10,\"i\":\"9\"},\"panelIndex\":\"9\",\"embeddableConfig\":{\"title\":\"User Impact Analysis\"},\"panelRefName\":\"panel_9\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":30,\"w\":24,\"h\":8,\"i\":\"10\"},\"panelIndex\":\"10\",\"embeddableConfig\":{\"title\":\"Recent Error Events\"},\"panelRefName\":\"panel_10\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":30,\"w\":24,\"h\":8,\"i\":\"11\"},\"panelIndex\":\"11\",\"embeddableConfig\":{\"title\":\"Error Stack Traces\"},\"panelRefName\":\"panel_11\"}]",
+        "timeRestore": false,
+        "timeTo": "now",
+        "timeFrom": "now-24h",
+        "refreshInterval": {
+          "pause": false,
+          "value": 30000
+        },
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"query\":\"\",\"language\":\"kuery\"},\"filter\":[]}"
+        }
+      },
+      "references": [
+        {
+          "name": "panel_1",
+          "type": "visualization",
+          "id": "error-rate-gauge"
+        },
+        {
+          "name": "panel_2",
+          "type": "visualization",
+          "id": "critical-error-count"
+        },
+        {
+          "name": "panel_3",
+          "type": "visualization",
+          "id": "error-by-severity"
+        },
+        {
+          "name": "panel_4",
+          "type": "visualization",
+          "id": "mean-time-to-resolution"
+        },
+        {
+          "name": "panel_5",
+          "type": "visualization",
+          "id": "error-trend-analysis"
+        },
+        {
+          "name": "panel_6",
+          "type": "visualization",
+          "id": "error-distribution-by-service"
+        },
+        {
+          "name": "panel_7",
+          "type": "visualization",
+          "id": "top-error-messages"
+        },
+        {
+          "name": "panel_8",
+          "type": "visualization",
+          "id": "error-frequency-by-endpoint"
+        },
+        {
+          "name": "panel_9",
+          "type": "visualization",
+          "id": "user-impact-analysis"
+        },
+        {
+          "name": "panel_10",
+          "type": "visualization",
+          "id": "recent-error-events"
+        },
+        {
+          "name": "panel_11",
+          "type": "visualization",
+          "id": "error-stack-traces"
+        }
+      ]
+    },
+    {
+      "id": "error-rate-gauge",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Error Rate",
+        "visState": "{\"title\":\"Error Rate\",\"type\":\"gauge\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"filters\",\"params\":{\"filters\":[{\"input\":{\"query\":\"level:error OR status_code:[400 TO 599]\"},\"label\":\"Errors\"},{\"input\":{\"query\":\"*\"},\"label\":\"Total\"}]},\"schema\":\"group\"}],\"params\":{\"gauge\":{\"alignment\":\"automatic\",\"extendRange\":true,\"percentageMode\":true,\"gaugeType\":\"Arc\",\"gaugeStyle\":\"Full\",\"backStyle\":\"Full\",\"orientation\":\"vertical\",\"colorSchema\":\"Red to Green\",\"gaugeColorMode\":\"Labels\",\"colorsRange\":[{\"from\":0,\"to\":2},{\"from\":2,\"to\":5},{\"from\":5,\"to\":100}],\"invertColors\":true,\"labels\":{\"show\":true,\"color\":\"black\"},\"scale\":{\"show\":true,\"labels\":false,\"color\":\"#333\"},\"type\":\"meter\",\"style\":{\"bgFill\":\"#eee\",\"bgColor\":false,\"labelColor\":false,\"subText\":\"Error Percentage\",\"fontSize\":60}}}}",
+        "uiStateJSON": "{}",
+        "description": "Current application error rate percentage",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "critical-error-count",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Critical Error Count",
+        "visState": "{\"title\":\"Critical Error Count\",\"type\":\"metric\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"}],\"params\":{\"addTooltip\":true,\"addLegend\":false,\"type\":\"metric\",\"metric\":{\"percentageMode\":false,\"useRanges\":true,\"colorSchema\":\"Red to Green\",\"metricColorMode\":\"Background\",\"colorsRange\":[{\"from\":0,\"to\":5},{\"from\":5,\"to\":20},{\"from\":20,\"to\":100}],\"labels\":{\"show\":true},\"invertColors\":true,\"style\":{\"bgFill\":\"#000\",\"bgColor\":false,\"labelColor\":false,\"subText\":\"Critical Issues\",\"fontSize\":60}}}}",
+        "uiStateJSON": "{}",
+        "description": "Number of critical errors in last hour",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"bool\":{\"must\":[{\"terms\":{\"level.keyword\":[\"error\",\"fatal\",\"critical\"]}},{\"range\":{\"@timestamp\":{\"gte\":\"now-1h\"}}}]}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "error-by-severity",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Error by Severity",
+        "visState": "{\"title\":\"Error by Severity\",\"type\":\"pie\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"level.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":5,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"segment\"}],\"params\":{\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"isDonut\":true,\"labels\":{\"show\":false,\"values\":true,\"last_level\":true,\"truncate\":100}}}",
+        "uiStateJSON": "{}",
+        "description": "Error distribution by severity level",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"terms\":{\"level.keyword\":[\"error\",\"fatal\",\"critical\",\"warn\"]}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "mean-time-to-resolution",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Mean Time to Resolution",
+        "visState": "{\"title\":\"Mean Time to Resolution\",\"type\":\"metric\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"error_resolution_time\"},\"schema\":\"metric\"}],\"params\":{\"addTooltip\":true,\"addLegend\":false,\"type\":\"metric\",\"metric\":{\"percentageMode\":false,\"useRanges\":true,\"colorSchema\":\"Red to Green\",\"metricColorMode\":\"Background\",\"colorsRange\":[{\"from\":0,\"to\":300},{\"from\":300,\"to\":1800},{\"from\":1800,\"to\":7200}],\"labels\":{\"show\":true},\"invertColors\":true,\"style\":{\"bgFill\":\"#000\",\"bgColor\":false,\"labelColor\":false,\"subText\":\"Seconds\",\"fontSize\":50}}}}",
+        "uiStateJSON": "{}",
+        "description": "Average time to resolve critical errors",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"error_resolution_time\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "error-trend-analysis",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Error Trend Analysis",
+        "visState": "{\"title\":\"Error Trend Analysis\",\"type\":\"line\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"params\":{\"field\":\"@timestamp\",\"timeRange\":{\"from\":\"now-24h\",\"to\":\"now\"},\"useNormalizedEsInterval\":true,\"scaleMetricValues\":false,\"interval\":\"auto\",\"drop_partials\":false,\"min_doc_count\":1,\"extended_bounds\":{}},\"schema\":\"segment\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"level.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":5,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"group\"}],\"params\":{\"grid\":{\"categoryLines\":false,\"valueAxis\":\"ValueAxis-1\"},\"categoryAxes\":[{\"id\":\"CategoryAxis-1\",\"type\":\"category\",\"position\":\"bottom\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\"},\"labels\":{\"show\":true,\"truncate\":100},\"title\":{}}],\"valueAxes\":[{\"id\":\"ValueAxis-1\",\"name\":\"LeftAxis-1\",\"type\":\"value\",\"position\":\"left\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\",\"mode\":\"normal\"},\"labels\":{\"show\":true,\"rotate\":0,\"filter\":false,\"truncate\":100},\"title\":{\"text\":\"Error Count\"}}],\"seriesParams\":[{\"show\":true,\"type\":\"line\",\"mode\":\"normal\",\"data\":{\"label\":\"Count\",\"id\":\"1\"},\"valueAxis\":\"ValueAxis-1\",\"drawLinesBetweenPoints\":true,\"lineWidth\":2,\"showCircles\":true}],\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"times\":[],\"addTimeMarker\":false,\"thresholdLine\":{\"show\":true,\"value\":50,\"width\":2,\"style\":\"full\",\"color\":\"#E7664C\"}}}",
+        "uiStateJSON": "{}",
+        "description": "Error count trends over time by severity",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"terms\":{\"level.keyword\":[\"error\",\"fatal\",\"critical\",\"warn\"]}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "error-distribution-by-service",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Error Distribution by Service",
+        "visState": "{\"title\":\"Error Distribution by Service\",\"type\":\"horizontal_bar\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"service.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":10,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"segment\"}],\"params\":{\"grid\":{\"categoryLines\":false,\"valueAxis\":\"ValueAxis-1\"},\"categoryAxes\":[{\"id\":\"CategoryAxis-1\",\"type\":\"category\",\"position\":\"left\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\"},\"labels\":{\"show\":true,\"truncate\":100},\"title\":{}}],\"valueAxes\":[{\"id\":\"ValueAxis-1\",\"name\":\"BottomAxis-1\",\"type\":\"value\",\"position\":\"bottom\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\",\"mode\":\"normal\"},\"labels\":{\"show\":true,\"rotate\":0,\"filter\":false,\"truncate\":100},\"title\":{\"text\":\"Error Count\"}}],\"seriesParams\":[{\"show\":true,\"type\":\"histogram\",\"mode\":\"normal\",\"data\":{\"label\":\"Count\",\"id\":\"1\"},\"valueAxis\":\"ValueAxis-1\",\"drawLinesBetweenPoints\":true,\"lineWidth\":2,\"showCircles\":true}],\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"times\":[],\"addTimeMarker\":false,\"thresholdLine\":{\"show\":false,\"value\":10,\"width\":1,\"style\":\"full\",\"color\":\"#E7664C\"}}}",
+        "uiStateJSON": "{}",
+        "description": "Error count distribution across different services",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"bool\":{\"must\":[{\"terms\":{\"level.keyword\":[\"error\",\"fatal\",\"critical\"]}},{\"exists\":{\"field\":\"service\"}}]}},\"filter\":[]}"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,228 @@
+# User Activity Logs Input Configuration
+# Specialized input for user behavior and interaction tracking
+
+- type: log
+  id: user-activity-logs  
+  enabled: true
+  paths:
+    - ../frontend/logs/user-action-*.log
+    - ../frontend/logs/frontend-*.log
+    - ../backend/logs/combined-*.log
+  fields:
+    log_type: user_activity
+    service: "${SERVICE_NAME:frontend}"
+    environment: "${ENVIRONMENT:development}"
+  fields_under_root: true
+  
+  # JSON parsing
+  json.keys_under_root: true
+  json.add_error_key: true
+  json.message_key: message
+  
+  # Include only user activity logs
+  include_lines: [
+    '.*"action".*',
+    '.*"userId".*',
+    '.*"sessionId".*',
+    '.*page_view.*',
+    '.*click.*',
+    '.*form_submit.*',
+    '.*search.*',
+    '.*navigation.*',
+    '.*user_interaction.*'
+  ]
+  
+  # User activity processors
+  processors:
+    # Enhance user activity data
+    - script:
+        lang: javascript
+        source: >
+          function process(event) {
+            var action = event.Get("action");
+            var page = event.Get("page");
+            var userId = event.Get("userId");
+            var sessionId = event.Get("sessionId");
+            var timestamp = event.Get("@timestamp");
+            
+            // Categorize user actions
+            if (action) {
+              switch(action) {
+                case "page_view":
+                  event.Put("activity_category", "navigation");
+                  event.Put("engagement_type", "passive");
+                  break;
+                case "click":
+                case "button_click":
+                  event.Put("activity_category", "interaction");
+                  event.Put("engagement_type", "active");
+                  break;
+                case "form_submit":
+                case "search":
+                  event.Put("activity_category", "conversion");
+                  event.Put("engagement_type", "active");
+                  break;
+                case "scroll":
+                  event.Put("activity_category", "engagement");
+                  event.Put("engagement_type", "passive");
+                  break;
+                case "error":
+                  event.Put("activity_category", "error");
+                  event.Put("engagement_type", "negative");
+                  break;
+                default:
+                  event.Put("activity_category", "general");
+                  event.Put("engagement_type", "neutral");
+              }
+            }
+            
+            // Page categorization
+            if (page) {
+              if (page.includes("dashboard") || page === "/") {
+                event.Put("page_category", "dashboard");
+              } else if (page.includes("chat") || page.includes("ai")) {
+                event.Put("page_category", "ai_interaction");  
+              } else if (page.includes("translate")) {
+                event.Put("page_category", "translation");
+              } else if (page.includes("auth") || page.includes("login")) {
+                event.Put("page_category", "authentication");
+              } else if (page.includes("profile") || page.includes("settings")) {
+                event.Put("page_category", "user_management");
+              } else {
+                event.Put("page_category", "other");
+              }
+            }
+            
+            // Session analysis
+            if (sessionId) {
+              // Mark session events for later aggregation
+              event.Put("has_session", true);
+            }
+            
+            // User identification
+            if (userId && userId !== "anonymous") {
+              event.Put("user_type", "authenticated");
+            } else {
+              event.Put("user_type", "anonymous");
+            }
+            
+            // Device type detection from user agent
+            var userAgent = event.Get("userAgent");
+            if (userAgent) {
+              var ua = userAgent.toLowerCase();
+              if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) {
+                event.Put("device_type", "mobile");
+              } else if (ua.includes("tablet") || ua.includes("ipad")) {
+                event.Put("device_type", "tablet");
+              } else {
+                event.Put("device_type", "desktop");
+              }
+              
+              // Browser detection
+              if (ua.includes("chrome")) {
+                event.Put("browser", "chrome");
+              } else if (ua.includes("firefox")) {
+                event.Put("browser", "firefox");
+              } else if (ua.includes("safari")) {
+                event.Put("browser", "safari");
+              } else if (ua.includes("edge")) {
+                event.Put("browser", "edge");
+              } else {
+                event.Put("browser", "other");
+              }
+            }
+            
+            // Time-based analysis
+            if (timestamp) {
+              var date = new Date(timestamp);
+              var hour = date.getUTCHours();
+              
+              if (hour >= 6 && hour < 12) {
+                event.Put("time_period", "morning");
+              } else if (hour >= 12 && hour < 18) {
+                event.Put("time_period", "afternoon");
+              } else if (hour >= 18 && hour < 22) {
+                event.Put("time_period", "evening");
+              } else {
+                event.Put("time_period", "night");
+              }
+              
+              var dayOfWeek = date.getUTCDay();
+              if (dayOfWeek === 0 || dayOfWeek === 6) {
+                event.Put("day_type", "weekend");
+              } else {
+                event.Put("day_type", "weekday");
+              }
+            }
+          }
+    
+    # Activity tagging
+    - add_tags:
+        tags: [high_engagement]
+        when:
+          equals:
+            engagement_type: "active"
+            
+    - add_tags:
+        tags: [conversion_event]
+        when:
+          equals:
+            activity_category: "conversion"
+            
+    - add_tags:
+        tags: [ai_usage]
+        when:
+          equals:
+            page_category: "ai_interaction"
+            
+    - add_tags:
+        tags: [mobile_user]
+        when:
+          equals:
+            device_type: "mobile"
+            
+    - add_tags:
+        tags: [authenticated_user]
+        when:
+          equals:
+            user_type: "authenticated"
+            
+    - add_tags:
+        tags: [weekend_activity]
+        when:
+          equals:
+            day_type: "weekend"
+    
+    # Add engagement score
+    - script:
+        lang: javascript
+        source: >
+          function process(event) {
+            var score = 1; // Base score
+            
+            // Action type scoring
+            var category = event.Get("activity_category");
+            switch(category) {
+              case "conversion": score += 5; break;
+              case "interaction": score += 3; break;
+              case "engagement": score += 2; break;
+              case "navigation": score += 1; break;
+              case "error": score -= 2; break;
+            }
+            
+            // User type bonus
+            if (event.Get("user_type") === "authenticated") score += 2;
+            
+            // Time period adjustment
+            var period = event.Get("time_period");
+            if (period === "morning" || period === "afternoon") score += 1;
+            
+            event.Put("engagement_score", score);
+          }
+    
+    # Add session context
+    - add_fields:
+        target: session_analysis
+        fields:
+          needs_aggregation: true
+          event_sequence: 1

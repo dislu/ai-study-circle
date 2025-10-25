@@ -1,0 +1,117 @@
+# Performance Logs Input Configuration
+# Specialized input for performance monitoring logs
+
+- type: log
+  id: performance-logs
+  enabled: true
+  paths:
+    - ../frontend/logs/performance-*.log
+    - ../backend/logs/performance-*.log
+  fields:
+    log_type: performance
+    service: "${SERVICE_NAME:unknown}"
+    environment: "${ENVIRONMENT:development}"
+  fields_under_root: true
+  
+  # JSON parsing for performance data
+  json.keys_under_root: true
+  json.add_error_key: true
+  json.message_key: message
+  
+  # Include only performance-related logs
+  include_lines: ['.*"performance".*', '.*"responseTime".*', '.*"lcp".*', '.*"fid".*', '.*"cls".*']
+  
+  # Performance-specific processors
+  processors:
+    # Calculate performance scores
+    - script:
+        lang: javascript
+        source: >
+          function process(event) {
+            var perf = event.Get("performance");
+            if (perf) {
+              // LCP Score (Good: <=2.5s, Poor: >4.0s)
+              if (perf.lcp <= 2500) {
+                event.Put("performance.lcp_score", "good");
+              } else if (perf.lcp <= 4000) {
+                event.Put("performance.lcp_score", "needs_improvement");
+              } else {
+                event.Put("performance.lcp_score", "poor");
+              }
+              
+              // FID Score (Good: <=100ms, Poor: >300ms)
+              if (perf.fid <= 100) {
+                event.Put("performance.fid_score", "good");
+              } else if (perf.fid <= 300) {
+                event.Put("performance.fid_score", "needs_improvement");
+              } else {
+                event.Put("performance.fid_score", "poor");
+              }
+              
+              // CLS Score (Good: <=0.1, Poor: >0.25)
+              if (perf.cls <= 0.1) {
+                event.Put("performance.cls_score", "good");
+              } else if (perf.cls <= 0.25) {
+                event.Put("performance.cls_score", "needs_improvement");
+              } else {
+                event.Put("performance.cls_score", "poor");
+              }
+              
+              // Overall performance score
+              var scores = [
+                event.Get("performance.lcp_score"),
+                event.Get("performance.fid_score"), 
+                event.Get("performance.cls_score")
+              ];
+              
+              var goodCount = scores.filter(s => s === "good").length;
+              var poorCount = scores.filter(s => s === "poor").length;
+              
+              if (poorCount > 0) {
+                event.Put("performance.overall_score", "poor");
+              } else if (goodCount >= 2) {
+                event.Put("performance.overall_score", "good");
+              } else {
+                event.Put("performance.overall_score", "needs_improvement");
+              }
+            }
+            
+            // Response time categorization
+            var responseTime = event.Get("responseTime");
+            if (responseTime) {
+              if (responseTime <= 200) {
+                event.Put("response_category", "fast");
+              } else if (responseTime <= 1000) {
+                event.Put("response_category", "moderate");
+              } else if (responseTime <= 3000) {
+                event.Put("response_category", "slow");
+              } else {
+                event.Put("response_category", "very_slow");
+              }
+            }
+          }
+    
+    # Add performance tags
+    - add_tags:
+        tags: [performance_good]
+        when:
+          equals:
+            performance.overall_score: "good"
+            
+    - add_tags:
+        tags: [performance_poor]
+        when:
+          equals:
+            performance.overall_score: "poor"
+            
+    - add_tags:
+        tags: [slow_api]
+        when:
+          equals:
+            response_category: "slow"
+            
+    - add_tags:
+        tags: [very_slow_api]
+        when:
+          equals:
+            response_category: "very_slow"

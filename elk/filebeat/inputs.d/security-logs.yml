@@ -1,0 +1,198 @@
+# Security Logs Input Configuration  
+# Specialized input for security-related events
+
+- type: log
+  id: security-logs
+  enabled: true
+  paths:
+    - ../backend/logs/auth-*.log
+    - ../backend/logs/error-*.log
+    - ../backend/logs/combined-*.log
+  fields:
+    log_type: security
+    service: backend
+    environment: "${ENVIRONMENT:development}"
+  fields_under_root: true
+  
+  # JSON parsing
+  json.keys_under_root: true
+  json.add_error_key: true
+  json.message_key: message
+  
+  # Include only security-related logs
+  include_lines: [
+    '.*authentication.*',
+    '.*authorization.*', 
+    '.*login.*',
+    '.*logout.*',
+    '.*token.*',
+    '.*unauthorized.*',
+    '.*forbidden.*',
+    '.*rate.limit.*',
+    '.*suspicious.*',
+    '.*security.*',
+    '.*failed.*attempt.*',
+    '.*blocked.*',
+    '.*intrusion.*'
+  ]
+  
+  # Security-specific processors
+  processors:
+    # Detect authentication events
+    - script:
+        lang: javascript
+        source: >
+          function process(event) {
+            var message = event.Get("message");
+            var url = event.Get("url");
+            var statusCode = event.Get("statusCode");
+            var method = event.Get("method");
+            
+            if (message) {
+              var msgLower = message.toLowerCase();
+              
+              // Authentication events
+              if (msgLower.includes("login") || msgLower.includes("authentication")) {
+                event.Put("security_event_type", "authentication");
+                
+                if (msgLower.includes("success") || statusCode === 200) {
+                  event.Put("auth_result", "success");
+                } else if (msgLower.includes("failed") || msgLower.includes("invalid") || statusCode === 401) {
+                  event.Put("auth_result", "failure");
+                  event.Put("security_severity", "medium");
+                }
+              }
+              
+              // Authorization events  
+              if (msgLower.includes("unauthorized") || msgLower.includes("forbidden") || statusCode === 403) {
+                event.Put("security_event_type", "authorization");
+                event.Put("auth_result", "denied");
+                event.Put("security_severity", "high");
+              }
+              
+              // Rate limiting
+              if (msgLower.includes("rate limit") || msgLower.includes("too many requests") || statusCode === 429) {
+                event.Put("security_event_type", "rate_limiting");
+                event.Put("security_severity", "medium");
+              }
+              
+              // Suspicious activity patterns
+              if (msgLower.includes("suspicious") || msgLower.includes("anomaly") || msgLower.includes("unusual")) {
+                event.Put("security_event_type", "suspicious_activity");
+                event.Put("security_severity", "high");
+              }
+              
+              // Token-related events
+              if (msgLower.includes("token")) {
+                if (msgLower.includes("invalid") || msgLower.includes("expired") || msgLower.includes("malformed")) {
+                  event.Put("security_event_type", "token_validation");
+                  event.Put("auth_result", "failure");
+                  event.Put("security_severity", "medium");
+                } else if (msgLower.includes("generated") || msgLower.includes("created")) {
+                  event.Put("security_event_type", "token_creation");
+                  event.Put("auth_result", "success");
+                }
+              }
+            }
+            
+            // API endpoint security classification
+            if (url) {
+              if (url.includes("/auth") || url.includes("/login") || url.includes("/register")) {
+                event.Put("endpoint_type", "authentication");
+              } else if (url.includes("/admin") || url.includes("/management")) {
+                event.Put("endpoint_type", "administrative");
+                event.Put("security_sensitivity", "high");
+              } else if (url.includes("/api/")) {
+                event.Put("endpoint_type", "api");
+              }
+            }
+            
+            // IP reputation (simplified example)
+            var ip = event.Get("ip");
+            if (ip) {
+              // Mark private IPs as internal
+              if (ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("127.")) {
+                event.Put("ip_type", "internal");
+              } else {
+                event.Put("ip_type", "external");
+              }
+            }
+          }
+    
+    # Security event tagging
+    - add_tags:
+        tags: [security_critical]
+        when:
+          equals:
+            security_severity: "high"
+            
+    - add_tags:
+        tags: [auth_failure]
+        when:
+          equals:
+            auth_result: "failure"
+            
+    - add_tags:
+        tags: [suspicious_activity]
+        when:
+          equals:
+            security_event_type: "suspicious_activity"
+            
+    - add_tags:
+        tags: [rate_limited]
+        when:
+          equals:
+            security_event_type: "rate_limiting"
+            
+    - add_tags:
+        tags: [external_access]
+        when:
+          equals:
+            ip_type: "external"
+            
+    - add_tags:
+        tags: [admin_access]
+        when:
+          equals:
+            endpoint_type: "administrative"
+    
+    # Enrich with additional context
+    - add_fields:
+        target: security
+        fields:
+          analyzed_at: '@timestamp'
+          risk_score: 0
+          
+    # Calculate risk score
+    - script:
+        lang: javascript
+        source: >
+          function process(event) {
+            var riskScore = 0;
+            
+            // Base risk factors
+            if (event.Get("auth_result") === "failure") riskScore += 3;
+            if (event.Get("security_severity") === "high") riskScore += 5;
+            if (event.Get("security_severity") === "medium") riskScore += 2;
+            if (event.Get("ip_type") === "external") riskScore += 1;
+            if (event.Get("endpoint_type") === "administrative") riskScore += 3;
+            
+            // Status code penalties
+            var statusCode = event.Get("statusCode");
+            if (statusCode === 401 || statusCode === 403) riskScore += 2;
+            if (statusCode === 429) riskScore += 1;
+            if (statusCode >= 500) riskScore += 1;
+            
+            event.Put("security.risk_score", riskScore);
+            
+            // Risk level classification
+            if (riskScore >= 8) {
+              event.Put("security.risk_level", "critical");
+            } else if (riskScore >= 5) {
+              event.Put("security.risk_level", "high"); 
+            } else if (riskScore >= 2) {
+              event.Put("security.risk_level", "medium");
+            } else {
+              event.Put("security.risk_level", "low");
+            }
+          }

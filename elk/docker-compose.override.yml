@@ -1,0 +1,217 @@
+version: '3.8'
+
+services:
+  # Elasticsearch with Watcher enabled
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.watcher.enabled=true
+      - xpack.notification.email.enabled=true
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - bootstrap.memory_lock=true
+      - cluster.name=ai-study-logs
+      - node.name=es-node-01
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - ./elasticsearch/config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elk-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Logstash with enhanced pipeline configurations
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    environment:
+      - "LS_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.monitoring.enabled=false
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./logstash/patterns:/usr/share/logstash/patterns:ro
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    networks:
+      - elk-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Kibana with advanced configurations
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_NAME=ai-study-kibana
+      - SERVER_HOST=0.0.0.0
+      - XPACK_SECURITY_ENABLED=false
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=a-32-character-long-encryption-key
+      - XPACK_REPORTING_ENCRYPTIONKEY=a-32-character-long-encryption-key
+      - XPACK_SECURITY_ENCRYPTIONKEY=a-32-character-long-encryption-key
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - kibana-data:/usr/share/kibana/data
+    ports:
+      - "5601:5601"
+    networks:
+      - elk-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5601/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # Filebeat with enhanced log collection
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.0
+    container_name: filebeat
+    user: root
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - LOGSTASH_HOSTS=logstash:5044
+    volumes:
+      - ./filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./filebeat/inputs:/usr/share/filebeat/inputs:ro
+      - ./filebeat/modules.d:/usr/share/filebeat/modules.d:ro
+      - ../logs:/var/log/ai-study:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - filebeat-data:/usr/share/filebeat/data
+    networks:
+      - elk-network
+    depends_on:
+      logstash:
+        condition: service_healthy
+    command: >
+      bash -c "
+        filebeat setup --index-management -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=[\"elasticsearch:9200\"]' &&
+        filebeat -e
+      "
+
+  # MetricBeat for system monitoring
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:8.11.0
+    container_name: metricbeat
+    user: root
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    volumes:
+      - ./metricbeat/config/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+      - /proc:/hostfs/proc:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /:/hostfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - metricbeat-data:/usr/share/metricbeat/data
+    networks:
+      - elk-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    command: >
+      bash -c "
+        metricbeat setup --index-management -E output.elasticsearch.hosts=[\"elasticsearch:9200\"] &&
+        metricbeat -e -system.hostfs=/hostfs
+      "
+
+  # Elasticsearch Head for cluster management (optional)
+  elasticsearch-head:
+    image: mobz/elasticsearch-head:5
+    container_name: elasticsearch-head
+    ports:
+      - "9100:9100"
+    networks:
+      - elk-network
+    depends_on:
+      - elasticsearch
+
+  # APM Server for application performance monitoring
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:8.11.0
+    container_name: apm-server
+    environment:
+      - output.elasticsearch.hosts=["elasticsearch:9200"]
+      - apm-server.host=0.0.0.0:8200
+      - apm-server.rum.enabled=true
+      - setup.kibana.host=kibana:5601
+      - setup.template.enabled=true
+      - logging.level=info
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./apm-server/config/apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
+    networks:
+      - elk-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    command: >
+      bash -c "
+        apm-server setup -E output.elasticsearch.hosts=[\"elasticsearch:9200\"] -E setup.kibana.host=kibana:5601 &&
+        apm-server -e
+      "
+
+  # Alertmanager for external alerting (optional)
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/config/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    networks:
+      - elk-network
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      - '--cluster.advertise-address=0.0.0.0:9093'
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  kibana-data:
+    driver: local
+  filebeat-data:
+    driver: local
+  metricbeat-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+
+networks:
+  elk-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

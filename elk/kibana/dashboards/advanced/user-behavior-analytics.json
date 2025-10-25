@@ -1,0 +1,188 @@
+{
+  "version": "8.11.0",
+  "objects": [
+    {
+      "id": "user-behavior-analytics-dashboard",
+      "type": "dashboard",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "AI Study Circle - User Behavior Analytics",
+        "hits": 0,
+        "description": "Comprehensive user behavior tracking with session analytics, engagement metrics, and learning patterns",
+        "panelsJSON": "[{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":0,\"w\":12,\"h\":8,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{\"title\":\"Active User Sessions\"},\"panelRefName\":\"panel_1\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":12,\"y\":0,\"w\":12,\"h\":8,\"i\":\"2\"},\"panelIndex\":\"2\",\"embeddableConfig\":{\"title\":\"User Engagement Score\"},\"panelRefName\":\"panel_2\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":0,\"w\":12,\"h\":8,\"i\":\"3\"},\"panelIndex\":\"3\",\"embeddableConfig\":{\"title\":\"Session Duration Distribution\"},\"panelRefName\":\"panel_3\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":36,\"y\":0,\"w\":12,\"h\":8,\"i\":\"4\"},\"panelIndex\":\"4\",\"embeddableConfig\":{\"title\":\"Learning Progress Score\"},\"panelRefName\":\"panel_4\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":8,\"w\":24,\"h\":12,\"i\":\"5\"},\"panelIndex\":\"5\",\"embeddableConfig\":{\"title\":\"User Journey Flow\"},\"panelRefName\":\"panel_5\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":8,\"w\":24,\"h\":12,\"i\":\"6\"},\"panelIndex\":\"6\",\"embeddableConfig\":{\"title\":\"Feature Usage Heatmap\"},\"panelRefName\":\"panel_6\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":20,\"w\":16,\"h\":10,\"i\":\"7\"},\"panelIndex\":\"7\",\"embeddableConfig\":{\"title\":\"Most Active Features\"},\"panelRefName\":\"panel_7\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":16,\"y\":20,\"w\":16,\"h\":10,\"i\":\"8\"},\"panelIndex\":\"8\",\"embeddableConfig\":{\"title\":\"User Device & Browser Stats\"},\"panelRefName\":\"panel_8\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":32,\"y\":20,\"w\":16,\"h\":10,\"i\":\"9\"},\"panelIndex\":\"9\",\"embeddableConfig\":{\"title\":\"Geographic User Distribution\"},\"panelRefName\":\"panel_9\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":0,\"y\":30,\"w\":24,\"h\":8,\"i\":\"10\"},\"panelIndex\":\"10\",\"embeddableConfig\":{\"title\":\"Recent User Activities\"},\"panelRefName\":\"panel_10\"},{\"version\":\"8.11.0\",\"gridData\":{\"x\":24,\"y\":30,\"w\":24,\"h\":8,\"i\":\"11\"},\"panelIndex\":\"11\",\"embeddableConfig\":{\"title\":\"Learning Completion Rates\"},\"panelRefName\":\"panel_11\"}]",
+        "timeRestore": false,
+        "timeTo": "now",
+        "timeFrom": "now-7d",
+        "refreshInterval": {
+          "pause": false,
+          "value": 30000
+        },
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"query\":\"\",\"language\":\"kuery\"},\"filter\":[]}"
+        }
+      },
+      "references": [
+        {
+          "name": "panel_1",
+          "type": "visualization",
+          "id": "active-user-sessions"
+        },
+        {
+          "name": "panel_2",
+          "type": "visualization",
+          "id": "user-engagement-score"
+        },
+        {
+          "name": "panel_3",
+          "type": "visualization",
+          "id": "session-duration-distribution"
+        },
+        {
+          "name": "panel_4",
+          "type": "visualization",
+          "id": "learning-progress-score"
+        },
+        {
+          "name": "panel_5",
+          "type": "visualization",
+          "id": "user-journey-flow"
+        },
+        {
+          "name": "panel_6",
+          "type": "visualization",
+          "id": "feature-usage-heatmap"
+        },
+        {
+          "name": "panel_7",
+          "type": "visualization",
+          "id": "most-active-features"
+        },
+        {
+          "name": "panel_8",
+          "type": "visualization",
+          "id": "user-device-browser-stats"
+        },
+        {
+          "name": "panel_9",
+          "type": "visualization",
+          "id": "geographic-user-distribution"
+        },
+        {
+          "name": "panel_10",
+          "type": "visualization",
+          "id": "recent-user-activities"
+        },
+        {
+          "name": "panel_11",
+          "type": "visualization",
+          "id": "learning-completion-rates"
+        }
+      ]
+    },
+    {
+      "id": "active-user-sessions",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Active User Sessions",
+        "visState": "{\"title\":\"Active User Sessions\",\"type\":\"metric\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"cardinality\",\"params\":{\"field\":\"session_id.keyword\"},\"schema\":\"metric\"}],\"params\":{\"addTooltip\":true,\"addLegend\":false,\"type\":\"metric\",\"metric\":{\"percentageMode\":false,\"useRanges\":true,\"colorSchema\":\"Green to Red\",\"metricColorMode\":\"Background\",\"colorsRange\":[{\"from\":0,\"to\":10},{\"from\":10,\"to\":50},{\"from\":50,\"to\":200}],\"labels\":{\"show\":true},\"invertColors\":false,\"style\":{\"bgFill\":\"#000\",\"bgColor\":false,\"labelColor\":false,\"subText\":\"Concurrent Sessions\",\"fontSize\":60}}}}",
+        "uiStateJSON": "{}",
+        "description": "Number of active user sessions",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"bool\":{\"must\":[{\"exists\":{\"field\":\"session_id\"}},{\"range\":{\"@timestamp\":{\"gte\":\"now-1h\"}}}]}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "user-engagement-score",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "User Engagement Score",
+        "visState": "{\"title\":\"User Engagement Score\",\"type\":\"gauge\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"user_behavior.engagement_score\"},\"schema\":\"metric\"}],\"params\":{\"gauge\":{\"alignment\":\"automatic\",\"extendRange\":true,\"percentageMode\":false,\"gaugeType\":\"Arc\",\"gaugeStyle\":\"Full\",\"backStyle\":\"Full\",\"orientation\":\"vertical\",\"colorSchema\":\"Green to Red\",\"gaugeColorMode\":\"Labels\",\"colorsRange\":[{\"from\":0,\"to\":30},{\"from\":30,\"to\":70},{\"from\":70,\"to\":100}],\"invertColors\":false,\"labels\":{\"show\":true,\"color\":\"black\"},\"scale\":{\"show\":true,\"labels\":false,\"color\":\"#333\"},\"type\":\"meter\",\"style\":{\"bgFill\":\"#eee\",\"bgColor\":false,\"labelColor\":false,\"subText\":\"Engagement Level\",\"fontSize\":60}}}}",
+        "uiStateJSON": "{}",
+        "description": "Average user engagement score",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"user_behavior.engagement_score\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "session-duration-distribution",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Session Duration Distribution",
+        "visState": "{\"title\":\"Session Duration Distribution\",\"type\":\"histogram\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"histogram\",\"params\":{\"field\":\"user_behavior.session_duration\",\"interval\":300,\"extended_bounds\":{}},\"schema\":\"segment\"}],\"params\":{\"grid\":{\"categoryLines\":false,\"valueAxis\":\"ValueAxis-1\"},\"categoryAxes\":[{\"id\":\"CategoryAxis-1\",\"type\":\"category\",\"position\":\"bottom\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\"},\"labels\":{\"show\":true,\"truncate\":100},\"title\":{\"text\":\"Session Duration (seconds)\"}}],\"valueAxes\":[{\"id\":\"ValueAxis-1\",\"name\":\"LeftAxis-1\",\"type\":\"value\",\"position\":\"left\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\",\"mode\":\"normal\"},\"labels\":{\"show\":true,\"rotate\":0,\"filter\":false,\"truncate\":100},\"title\":{\"text\":\"Count\"}}],\"seriesParams\":[{\"show\":true,\"type\":\"histogram\",\"mode\":\"normal\",\"data\":{\"label\":\"Count\",\"id\":\"1\"},\"valueAxis\":\"ValueAxis-1\",\"drawLinesBetweenPoints\":true,\"lineWidth\":2,\"showCircles\":true}],\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"times\":[],\"addTimeMarker\":false,\"thresholdLine\":{\"show\":false,\"value\":10,\"width\":1,\"style\":\"full\",\"color\":\"#E7664C\"}}}",
+        "uiStateJSON": "{}",
+        "description": "Distribution of user session durations",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"user_behavior.session_duration\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "learning-progress-score",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Learning Progress Score",
+        "visState": "{\"title\":\"Learning Progress Score\",\"type\":\"metric\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"avg\",\"params\":{\"field\":\"user_behavior.learning_progress\"},\"schema\":\"metric\"}],\"params\":{\"addTooltip\":true,\"addLegend\":false,\"type\":\"metric\",\"metric\":{\"percentageMode\":true,\"useRanges\":true,\"colorSchema\":\"Green to Red\",\"metricColorMode\":\"Background\",\"colorsRange\":[{\"from\":0,\"to\":0.3},{\"from\":0.3,\"to\":0.7},{\"from\":0.7,\"to\":1}],\"labels\":{\"show\":true},\"invertColors\":false,\"style\":{\"bgFill\":\"#000\",\"bgColor\":false,\"labelColor\":false,\"subText\":\"Completion Rate\",\"fontSize\":60}}}}",
+        "uiStateJSON": "{}",
+        "description": "Average learning progress completion",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"user_behavior.learning_progress\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "user-journey-flow",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "User Journey Flow",
+        "visState": "{\"title\":\"User Journey Flow\",\"type\":\"line\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"params\":{\"field\":\"@timestamp\",\"timeRange\":{\"from\":\"now-7d\",\"to\":\"now\"},\"useNormalizedEsInterval\":true,\"scaleMetricValues\":false,\"interval\":\"auto\",\"drop_partials\":false,\"min_doc_count\":1,\"extended_bounds\":{}},\"schema\":\"segment\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"user_action.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":10,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"group\"}],\"params\":{\"grid\":{\"categoryLines\":false,\"valueAxis\":\"ValueAxis-1\"},\"categoryAxes\":[{\"id\":\"CategoryAxis-1\",\"type\":\"category\",\"position\":\"bottom\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\"},\"labels\":{\"show\":true,\"truncate\":100},\"title\":{}}],\"valueAxes\":[{\"id\":\"ValueAxis-1\",\"name\":\"LeftAxis-1\",\"type\":\"value\",\"position\":\"left\",\"show\":true,\"style\":{},\"scale\":{\"type\":\"linear\",\"mode\":\"normal\"},\"labels\":{\"show\":true,\"rotate\":0,\"filter\":false,\"truncate\":100},\"title\":{\"text\":\"User Actions\"}}],\"seriesParams\":[{\"show\":true,\"type\":\"line\",\"mode\":\"normal\",\"data\":{\"label\":\"Count\",\"id\":\"1\"},\"valueAxis\":\"ValueAxis-1\",\"drawLinesBetweenPoints\":true,\"lineWidth\":2,\"showCircles\":true}],\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"times\":[],\"addTimeMarker\":false,\"thresholdLine\":{\"show\":false,\"value\":10,\"width\":1,\"style\":\"full\",\"color\":\"#E7664C\"}}}",
+        "uiStateJSON": "{}",
+        "description": "User actions and journey flow over time",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"user_action\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "feature-usage-heatmap",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Feature Usage Heatmap",
+        "visState": "{\"title\":\"Feature Usage Heatmap\",\"type\":\"heatmap\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"params\":{\"field\":\"@timestamp\",\"timeRange\":{\"from\":\"now-7d\",\"to\":\"now\"},\"useNormalizedEsInterval\":true,\"scaleMetricValues\":false,\"interval\":\"1h\",\"drop_partials\":false,\"min_doc_count\":0,\"extended_bounds\":{}},\"schema\":\"segment\"},{\"id\":\"3\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"feature_used.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":10,\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"group\"}],\"params\":{\"addTooltip\":true,\"addLegend\":true,\"enableHover\":false,\"legendPosition\":\"right\",\"times\":[],\"colorsNumber\":4,\"colorSchema\":\"Blues\",\"setColorRange\":false,\"colorsRange\":[],\"invertColors\":false,\"percentageMode\":false,\"valueAxes\":[{\"show\":false,\"id\":\"ValueAxis-1\",\"type\":\"value\",\"scale\":{\"type\":\"linear\",\"defaultYExtents\":false},\"labels\":{\"show\":false,\"rotate\":0,\"overwriteColor\":false,\"color\":\"black\"}}]}}",
+        "uiStateJSON": "{}",
+        "description": "Feature usage patterns by time and feature type",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"feature_used\"}},\"filter\":[]}"
+        }
+      }
+    },
+    {
+      "id": "most-active-features",
+      "type": "visualization",
+      "namespaces": ["default"],
+      "attributes": {
+        "title": "Most Active Features",
+        "visState": "{\"title\":\"Most Active Features\",\"type\":\"pie\",\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"params\":{},\"schema\":\"metric\"},{\"id\":\"2\",\"enabled\":true,\"type\":\"terms\",\"params\":{\"field\":\"feature_used.keyword\",\"orderBy\":\"1\",\"order\":\"desc\",\"size\":10,\"otherBucket\":true,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\"},\"schema\":\"segment\"}],\"params\":{\"addTooltip\":true,\"addLegend\":true,\"legendPosition\":\"right\",\"isDonut\":false,\"labels\":{\"show\":false,\"values\":true,\"last_level\":true,\"truncate\":100}}}",
+        "uiStateJSON": "{}",
+        "description": "Most frequently used features",
+        "version": 1,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"index\":\"ai-study-logs-*\",\"query\":{\"exists\":{\"field\":\"feature_used\"}},\"filter\":[]}"
+        }
+      }
+    }
+  ]
+}

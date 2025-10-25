@@ -1,0 +1,12 @@
+
+# Logging files
+logs/*.log
+logs/archive/*
+!logs/.gitkeep
+!logs/archive/.gitkeep
+
+# ELK Stack data
+elk/data/
+elk/elasticsearch/data/
+elk/logstash/data/
+elk/kibana/data/

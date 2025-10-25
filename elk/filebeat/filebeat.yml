@@ -1,0 +1,374 @@
+# Filebeat Configuration for AI Study Circle
+# Enhanced log collection with multiline processing and field enrichment
+
+filebeat.inputs:
+
+# Backend application logs
+- type: log
+  id: backend-app-logs
+  enabled: true
+  paths:
+    - ../backend/logs/combined-*.log
+    - ../backend/logs/error-*.log
+    - ../backend/logs/auth-*.log
+    - ../backend/logs/ai-*.log
+    - ../backend/logs/translation-*.log
+  fields:
+    service: backend
+    log_source: file
+    environment: "${ENVIRONMENT:development}"
+  fields_under_root: true
+  
+  # JSON log parsing
+  json.keys_under_root: true
+  json.add_error_key: true
+  json.message_key: message
+  
+  # Multiline processing for stack traces
+  multiline.pattern: '^[[:space:]]+(at|Caused by|\.\.\.|more)'
+  multiline.negate: false
+  multiline.match: after
+  multiline.max_lines: 50
+  
+  # Include metadata
+  include_lines: ['.*']
+  exclude_lines: ['^$']
+  
+  # Log rotation handling
+  close_inactive: 5m
+  scan_frequency: 10s
+  harvester_buffer_size: 16384
+
+# Frontend application logs
+- type: log
+  id: frontend-app-logs
+  enabled: true
+  paths:
+    - ../frontend/logs/frontend-*.log
+    - ../frontend/logs/error-*.log
+    - ../frontend/logs/performance-*.log
+    - ../frontend/logs/user-action-*.log
+    - ../frontend/logs/api-*.log
+  fields:
+    service: frontend
+    log_source: file
+    environment: "${ENVIRONMENT:development}"
+  fields_under_root: true
+  
+  # JSON log parsing
+  json.keys_under_root: true
+  json.add_error_key: true
+  json.message_key: message
+  
+  # Browser error multiline handling
+  multiline.pattern: '^[[:space:]]+(at|in|.*\.js:|.*\.tsx?:)'
+  multiline.negate: false
+  multiline.match: after
+  multiline.max_lines: 30
+  
+  # Performance and user action logs
+  include_lines: ['.*']
+  exclude_lines: ['^$', '^#']
+  
+  close_inactive: 5m
+  scan_frequency: 10s
+
+# Docker container logs
+- type: container
+  id: docker-backend-logs
+  enabled: true
+  paths:
+    - '/var/lib/docker/containers/*/*.log'
+  containers.ids:
+    - ai-study-backend
+  fields:
+    service: backend
+    log_source: docker
+    environment: "${ENVIRONMENT:development}"
+  fields_under_root: true
+  
+  # Container log parsing
+  json.keys_under_root: false
+  json.add_error_key: true
+  
+  # Clean up Docker log format
+  processors:
+    - decode_json_fields:
+        fields: ["message"]
+        target: ""
+        overwrite_keys: true
+
+- type: container
+  id: docker-frontend-logs
+  enabled: true
+  paths:
+    - '/var/lib/docker/containers/*/*.log'
+  containers.ids:
+    - ai-study-frontend
+  fields:
+    service: frontend
+    log_source: docker
+    environment: "${ENVIRONMENT:development}"
+  fields_under_root: true
+  
+  json.keys_under_root: false
+  json.add_error_key: true
+  
+  processors:
+    - decode_json_fields:
+        fields: ["message"]
+        target: ""
+        overwrite_keys: true
+
+# HTTP input for real-time logs
+- type: http_endpoint
+  id: http-logs
+  enabled: true
+  listen_address: 0.0.0.0
+  listen_port: 8080
+  url: "/logs"
+  response_code: 200
+  response_body: '{"status": "received"}'
+  fields:
+    log_source: http
+    environment: "${ENVIRONMENT:development}"
+  fields_under_root: true
+
+# TCP input for structured logs
+- type: tcp
+  id: tcp-logs
+  enabled: true
+  host: "0.0.0.0:9000"
+  fields:
+    log_source: tcp
+    environment: "${ENVIRONMENT:development}"
+  fields_under_root: true
+
+# Global processors for all inputs
+processors:
+  # Add host information
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+      
+  # Add Docker metadata
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"
+      
+  # Add Kubernetes metadata (if running in K8s)
+  - add_kubernetes_metadata:
+      host: ${NODE_NAME}
+      matchers:
+        - logs_path:
+            logs_path: "/var/log/containers/"
+            
+  # Timestamp processing
+  - timestamp:
+      field: "@timestamp"
+      layouts:
+        - '2006-01-02T15:04:05.000Z'
+        - '2006-01-02T15:04:05Z'
+        - '2006-01-02 15:04:05'
+      test:
+        - '2024-01-15T10:30:45.123Z'
+        
+  # Parse user agent
+  - user_agent:
+      field: userAgent
+      target_field: user_agent
+      ignore_missing: true
+      
+  # GeoIP processing for IP addresses
+  - geoip:
+      field: ip
+      target_field: geoip
+      ignore_missing: true
+      
+  # Add custom tags based on log level
+  - add_tags:
+      tags: [critical]
+      when:
+        or:
+          - equals:
+              level: "error"
+          - equals:
+              level: "ERROR"
+          - equals:
+              level: "fatal"
+          - equals:
+              level: "FATAL"
+              
+  - add_tags:
+      tags: [warning]
+      when:
+        or:
+          - equals:
+              level: "warn"
+          - equals:
+              level: "WARN"
+          - equals:
+              level: "warning"
+              
+  # Performance metrics tagging
+  - add_tags:
+      tags: [slow_response]
+      when:
+        and:
+          - has_fields: ['responseTime']
+          - range:
+              responseTime:
+                gte: 1000
+                
+  - add_tags:
+      tags: [very_slow_response]
+      when:
+        and:
+          - has_fields: ['responseTime']
+          - range:
+              responseTime:
+                gte: 5000
+                
+  # Security event tagging
+  - add_tags:
+      tags: [security_event]
+      when:
+        or:
+          - contains:
+              message: "authentication failed"
+          - contains:
+              message: "unauthorized"
+          - contains:
+              message: "forbidden"
+          - contains:
+              message: "invalid token"
+          - contains:
+              message: "rate limit"
+              
+  # API endpoint categorization
+  - add_tags:
+      tags: [api_call]
+      when:
+        and:
+          - has_fields: ['url']
+          - regexp:
+              url: '^/api/'
+              
+  # User action categorization
+  - add_tags:
+      tags: [user_interaction]
+      when:
+        has_fields: ['action', 'userId']
+        
+  # Error categorization
+  - add_tags:
+      tags: [application_error]
+      when:
+        and:
+          - has_fields: ['error']
+          - not:
+              contains:
+                error.name: "ValidationError"
+                
+  # Drop empty or debug logs in production
+  - drop_event:
+      when:
+        and:
+          - equals:
+              environment: "production"
+          - or:
+              - equals:
+                  level: "debug"
+              - equals:
+                  level: "DEBUG"
+              - equals:
+                  message: ""
+                  
+  # Rename fields for consistency
+  - rename:
+      fields:
+        - from: "msg"
+          to: "message"
+        - from: "lvl"
+          to: "level"
+        - from: "ts"
+          to: "@timestamp"
+      ignore_missing: true
+      fail_on_error: false
+      
+  # Convert string fields to numbers
+  - convert:
+      fields:
+        - {from: "responseTime", to: "responseTime", type: "long"}
+        - {from: "statusCode", to: "statusCode", type: "long"}
+        - {from: "performance.lcp", to: "performance.lcp", type: "long"}
+        - {from: "performance.fid", to: "performance.fid", type: "long"}
+        - {from: "performance.cls", to: "performance.cls", type: "float"}
+        - {from: "performance.memory.usedJSHeapSize", to: "performance.memory.usedJSHeapSize", type: "long"}
+        - {from: "sessionDuration", to: "sessionDuration", type: "long"}
+      ignore_missing: true
+      fail_on_error: false
+
+# Output configuration
+output.logstash:
+  hosts: ["logstash:5044"]
+  
+  # Load balancing
+  loadbalance: true
+  
+  # Bulk settings for performance
+  bulk_max_size: 1000
+  
+  # Connection settings
+  timeout: 30s
+  compression_level: 3
+  
+  # Pipeline routing
+  pipeline: "main"
+  
+  # Template settings
+  template.enabled: false
+
+# Alternative direct Elasticsearch output (disabled by default)
+#output.elasticsearch:
+#  hosts: ["elasticsearch:9200"]
+#  index: "ai-study-logs-%{+yyyy.MM.dd}"
+#  template.enabled: true
+#  template.pattern: "ai-study-logs-*"
+#  template.settings:
+#    index.number_of_shards: 1
+#    index.number_of_replicas: 0
+
+# Logging configuration
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+  rotateeverybytes: 10485760 # 10MB
+
+# Monitoring
+monitoring.enabled: true
+monitoring.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+
+# Registry settings
+filebeat.registry.path: /usr/share/filebeat/data/registry
+
+# Config reload
+filebeat.config.inputs:
+  enabled: true
+  path: inputs.d/*.yml
+  reload.enabled: true
+  reload.period: 10s
+
+# Performance settings
+queue.mem:
+  events: 4096
+  flush.min_events: 512
+  flush.timeout: 1s
+
+# HTTP settings for monitoring
+http.enabled: true
+http.port: 5066
+http.host: 0.0.0.0

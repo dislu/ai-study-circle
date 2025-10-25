@@ -1,0 +1,160 @@
+# ELK Stack Docker Compose Configuration
+# AI Study Circle - Centralized Logging Infrastructure
+version: '3.8'
+
+services:
+  # Elasticsearch - Search and Analytics Engine
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: ai-study-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xmx1g -Xms1g
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./elasticsearch/index-templates:/usr/share/elasticsearch/config/index-templates
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elk-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Logstash - Data Processing Pipeline
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: ai-study-logstash
+    environment:
+      - LS_JAVA_OPTS=-Xmx512m -Xms512m
+      - PIPELINE_WORKERS=2
+      - PIPELINE_BATCH_SIZE=125
+      - PIPELINE_BATCH_DELAY=50
+    volumes:
+      - ./logstash/config:/usr/share/logstash/config
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/patterns:/usr/share/logstash/patterns
+      - logstash_data:/usr/share/logstash/data
+      - ../backend/logs:/logs/backend:ro
+      - ../frontend/logs:/logs/frontend:ro
+    ports:
+      - "5044:5044"  # Filebeat input
+      - "5000:5000"  # TCP input for direct log shipping
+      - "9600:9600"  # Logstash monitoring API
+    networks:
+      - elk-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9600 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Kibana - Visualization and Dashboard
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: ai-study-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_NAME=kibana
+      - SERVER_HOST=0.0.0.0
+      - XPACK_SECURITY_ENABLED=false
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=a7a6311933d3503b89bc2dbc36572c33a6c10925682e591bffcab6911c06786d
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./kibana/dashboards:/usr/share/kibana/config/dashboards
+      - kibana_data:/usr/share/kibana/data
+    ports:
+      - "5601:5601"
+    networks:
+      - elk-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Filebeat - Log Data Shipper
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.0
+    container_name: ai-study-filebeat
+    user: root
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - LOGSTASH_HOSTS=logstash:5044
+    volumes:
+      - ./filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./filebeat/modules.d:/usr/share/filebeat/modules.d:ro
+      - ../backend/logs:/logs/backend:ro
+      - ../frontend/logs:/logs/frontend:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - filebeat_data:/usr/share/filebeat/data
+    networks:
+      - elk-network
+    depends_on:
+      logstash:
+        condition: service_healthy
+    command: filebeat -e -strict.perms=false
+
+  # Elasticsearch Head Plugin (Optional - for easy ES management)
+  elasticsearch-head:
+    image: mobz/elasticsearch-head:5
+    container_name: ai-study-elasticsearch-head
+    ports:
+      - "9100:9100"
+    networks:
+      - elk-network
+    depends_on:
+      - elasticsearch
+
+  # Cerebro - Elasticsearch Web Admin Tool (Optional)
+  cerebro:
+    image: lmenezes/cerebro:0.9.4
+    container_name: ai-study-cerebro
+    ports:
+      - "9000:9000"
+    networks:
+      - elk-network
+    depends_on:
+      - elasticsearch
+
+networks:
+  elk-network:
+    driver: bridge
+    name: ai-study-elk-network
+
+volumes:
+  elasticsearch_data:
+    driver: local
+    name: ai-study-elasticsearch-data
+  logstash_data:
+    driver: local
+    name: ai-study-logstash-data
+  kibana_data:
+    driver: local
+    name: ai-study-kibana-data
+  filebeat_data:
+    driver: local
+    name: ai-study-filebeat-data

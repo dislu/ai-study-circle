@@ -1,0 +1,109 @@
+{
+  "trigger": {
+    "schedule": {
+      "interval": "1m"
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "search_type": "query_then_fetch",
+        "indices": ["ai-study-logs-*"],
+        "rest_total_hits_as_int": true,
+        "body": {
+          "query": {
+            "bool": {
+              "must": [
+                {
+                  "terms": {
+                    "level.keyword": ["error", "fatal", "critical"]
+                  }
+                },
+                {
+                  "range": {
+                    "@timestamp": {
+                      "gte": "now-5m"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "aggs": {
+            "error_rate": {
+              "date_histogram": {
+                "field": "@timestamp",
+                "fixed_interval": "1m",
+                "min_doc_count": 0
+              }
+            },
+            "by_service": {
+              "terms": {
+                "field": "service.keyword",
+                "size": 10
+              }
+            },
+            "by_severity": {
+              "terms": {
+                "field": "level.keyword",
+                "size": 5
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "compare": {
+      "ctx.payload.hits.total": {
+        "gt": 10
+      }
+    }
+  },
+  "transform": {
+    "script": {
+      "source": "def error_rate = ctx.payload.hits.total; def time_window = '5 minutes'; def services = [:]; if (ctx.payload.aggregations.by_service.buckets.size() > 0) { for (bucket in ctx.payload.aggregations.by_service.buckets) { services[bucket.key] = bucket.doc_count; } } return ['error_count': error_rate, 'time_window': time_window, 'services_affected': services, 'severity_breakdown': ctx.payload.aggregations.by_severity.buckets, 'timestamp': ctx.trigger.triggered_time];"
+    }
+  },
+  "actions": {
+    "send_email": {
+      "email": {
+        "profile": "standard",
+        "to": ["admin@ai-study-circle.com", "devops@ai-study-circle.com"],
+        "subject": "🚨 Critical Error Rate Alert - AI Study Circle",
+        "body": {
+          "html": "<h2>🚨 Critical Error Rate Alert</h2><p><strong>Error Count:</strong> {{ctx.payload.error_count}} errors in the last {{ctx.payload.time_window}}</p><p><strong>Triggered At:</strong> {{ctx.payload.timestamp}}</p><h3>📊 Affected Services:</h3><ul>{{#ctx.payload.services_affected}}{{#.}}<li><strong>{{@key}}:</strong> {{.}} errors</li>{{/.}}{{/ctx.payload.services_affected}}</ul><h3>🔍 Severity Breakdown:</h3><ul>{{#ctx.payload.severity_breakdown}}<li><strong>{{key}}:</strong> {{doc_count}} occurrences</li>{{/ctx.payload.severity_breakdown}}</ul><p><strong>Action Required:</strong> Please investigate immediately and check the <a href=\"http://localhost:5601/app/kibana#/dashboard/error-tracking-dashboard\">Error Tracking Dashboard</a> for detailed analysis.</p>"
+        }
+      }
+    },
+    "log_to_file": {
+      "logging": {
+        "level": "error",
+        "text": "Critical error rate exceeded: {{ctx.payload.error_count}} errors in {{ctx.payload.time_window}}. Services affected: {{#ctx.payload.services_affected}}{{@key}}({{.}}) {{/ctx.payload.services_affected}}"
+      }
+    },
+    "webhook_notification": {
+      "webhook": {
+        "scheme": "http",
+        "host": "localhost",
+        "port": 5000,
+        "method": "post",
+        "path": "/api/alerts/error-rate",
+        "params": {},
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": "{ \"alert_type\": \"critical_error_rate\", \"error_count\": {{ctx.payload.error_count}}, \"time_window\": \"{{ctx.payload.time_window}}\", \"services_affected\": {{#toJson}}ctx.payload.services_affected{{/toJson}}, \"severity_breakdown\": {{#toJson}}ctx.payload.severity_breakdown{{/toJson}}, \"timestamp\": \"{{ctx.payload.timestamp}}\" }"
+      }
+    }
+  },
+  "throttle_period": "5m",
+  "metadata": {
+    "name": "Critical Error Rate Monitor",
+    "description": "Monitors for critical error rates and sends alerts when threshold is exceeded",
+    "created_by": "AI Study Circle DevOps",
+    "version": "1.0.0",
+    "tags": ["error-monitoring", "critical-alerts", "production"]
+  }
+}

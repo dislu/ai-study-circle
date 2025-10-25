@@ -1,0 +1,130 @@
+# Azure Container Instances Deployment Parameters
+# Cost-optimized configuration for AI Study Circle
+
+parameters:
+  # Basic Configuration
+  appName:
+    value: "ai-study-circle"
+  environment:
+    value: "prod"  # Change to dev/staging as needed
+  location:
+    value: "East US"  # Cost-effective region
+
+  # Container Registry (Azure Container Registry)
+  registryLoginServer:
+    value: "aistudycircle.azurecr.io"  # Replace with your ACR name
+  registryUsername:
+    value: "aistudycircle"
+  registryPassword:
+    value: ""  # Will be set via Key Vault or secure deployment
+
+  # Database Connections
+  mongoConnectionString:
+    value: ""  # Your MongoDB Atlas or Cosmos DB connection string
+  redisConnectionString:
+    value: ""  # Your Redis connection string
+  jwtSecret:
+    value: ""  # Your JWT secret key
+
+# Resource Sizing (Optimized for cost based on analysis)
+resourceConfig:
+  frontend:
+    cpu: 1.5      # vCPU cores
+    memory: 3     # GB RAM
+    replicas: 1   # Start with 1, scale as needed
+
+  backend:
+    cpu: 2        # vCPU cores  
+    memory: 4     # GB RAM
+    replicas: 1   # Start with 1, scale as needed
+
+  elk:
+    elasticsearch:
+      cpu: 1      # vCPU cores
+      memory: 2   # GB RAM
+    logstash:
+      cpu: 0.5    # vCPU cores
+      memory: 1   # GB RAM  
+    kibana:
+      cpu: 0.5    # vCPU cores
+      memory: 1   # GB RAM
+
+# Cost Optimization Settings
+costOptimization:
+  # Use burstable instances where possible
+  enableBursting: true
+  
+  # Auto-scaling settings
+  autoScale:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCpuPercent: 70
+    targetMemoryPercent: 80
+  
+  # Scheduling for cost savings (optional)
+  schedule:
+    enabled: false  # Set to true for dev environments
+    shutdownTime: "22:00"  # 10 PM
+    startupTime: "08:00"   # 8 AM
+    timezone: "UTC"
+  
+  # Storage optimization
+  storage:
+    useEphemeralStorage: true  # Cheaper than persistent disks
+    logRetentionDays: 7        # Reduce log storage costs
+
+# Networking Configuration
+networking:
+  # Virtual network settings
+  vnet:
+    addressSpace: "10.0.0.0/16"
+    subnetPrefix: "10.0.1.0/24"
+  
+  # Security settings
+  security:
+    allowedSourceIPs: ["0.0.0.0/0"]  # Restrict in production
+    enableHttps: true
+    enableWaf: false  # Disable WAF for cost savings initially
+
+# Monitoring and Logging
+monitoring:
+  # Use built-in monitoring to avoid additional costs
+  enableContainerInsights: false  # Can enable later if needed
+  logRetentionDays: 7
+  
+  # Custom ELK stack (your cost advantage!)
+  elk:
+    enabled: true
+    storageSize: "10Gi"  # Start small, expand as needed
+    
+# Environment-specific overrides
+environments:
+  dev:
+    resourceConfig:
+      frontend:
+        cpu: 0.5
+        memory: 1
+      backend:
+        cpu: 1
+        memory: 2
+    costOptimization:
+      schedule:
+        enabled: true
+        shutdownTime: "20:00"
+        startupTime: "09:00"
+  
+  staging:
+    resourceConfig:
+      frontend:
+        cpu: 1
+        memory: 2
+      backend:
+        cpu: 1.5
+        memory: 3
+  
+  prod:
+    # Use default values above
+    costOptimization:
+      autoScale:
+        maxReplicas: 5
+        targetCpuPercent: 60

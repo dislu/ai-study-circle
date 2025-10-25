@@ -1,0 +1,240 @@
+{
+  "index_patterns": ["ai-study-logs-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "index": {
+        "codec": "best_compression",
+        "refresh_interval": "5s",
+        "max_result_window": 50000
+      },
+      "analysis": {
+        "analyzer": {
+          "log_analyzer": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": ["lowercase", "stop"]
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": {
+          "type": "date",
+          "format": "strict_date_optional_time||epoch_millis"
+        },
+        "timestamp": {
+          "type": "date",
+          "format": "strict_date_optional_time||epoch_millis"
+        },
+        "level": {
+          "type": "keyword",
+          "fields": {
+            "text": {
+              "type": "text",
+              "analyzer": "log_analyzer"
+            }
+          }
+        },
+        "message": {
+          "type": "text",
+          "analyzer": "log_analyzer",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 512
+            }
+          }
+        },
+        "source": {
+          "type": "keyword"
+        },
+        "service": {
+          "type": "keyword"
+        },
+        "environment": {
+          "type": "keyword"
+        },
+        "version": {
+          "type": "keyword"
+        },
+        "sessionId": {
+          "type": "keyword"
+        },
+        "userId": {
+          "type": "keyword"
+        },
+        "requestId": {
+          "type": "keyword"
+        },
+        "category": {
+          "type": "keyword"
+        },
+        "tags": {
+          "type": "keyword"
+        },
+        "host": {
+          "properties": {
+            "hostname": {
+              "type": "keyword"
+            },
+            "ip": {
+              "type": "ip"
+            },
+            "os": {
+              "properties": {
+                "platform": {
+                  "type": "keyword"
+                },
+                "version": {
+                  "type": "keyword"
+                }
+              }
+            }
+          }
+        },
+        "http": {
+          "properties": {
+            "method": {
+              "type": "keyword"
+            },
+            "url": {
+              "type": "keyword",
+              "fields": {
+                "text": {
+                  "type": "text",
+                  "analyzer": "log_analyzer"
+                }
+              }
+            },
+            "status_code": {
+              "type": "integer"
+            },
+            "user_agent": {
+              "type": "text",
+              "analyzer": "log_analyzer",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 512
+                }
+              }
+            },
+            "response_time": {
+              "type": "integer"
+            }
+          }
+        },
+        "error": {
+          "properties": {
+            "name": {
+              "type": "keyword"
+            },
+            "message": {
+              "type": "text",
+              "analyzer": "log_analyzer"
+            },
+            "stack": {
+              "type": "text",
+              "analyzer": "log_analyzer"
+            },
+            "code": {
+              "type": "keyword"
+            }
+          }
+        },
+        "performance": {
+          "properties": {
+            "metric": {
+              "type": "keyword"
+            },
+            "value": {
+              "type": "float"
+            },
+            "unit": {
+              "type": "keyword"
+            },
+            "threshold": {
+              "type": "keyword"
+            }
+          }
+        },
+        "user_action": {
+          "properties": {
+            "action": {
+              "type": "keyword"
+            },
+            "element": {
+              "properties": {
+                "tagName": {
+                  "type": "keyword"
+                },
+                "id": {
+                  "type": "keyword"
+                },
+                "className": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "coordinates": {
+              "properties": {
+                "x": {
+                  "type": "integer"
+                },
+                "y": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "api": {
+          "properties": {
+            "endpoint": {
+              "type": "keyword"
+            },
+            "method": {
+              "type": "keyword"
+            },
+            "status": {
+              "type": "integer"
+            },
+            "duration": {
+              "type": "integer"
+            },
+            "size": {
+              "type": "integer"
+            }
+          }
+        },
+        "geo": {
+          "properties": {
+            "location": {
+              "type": "geo_point"
+            },
+            "country": {
+              "type": "keyword"
+            },
+            "city": {
+              "type": "keyword"
+            }
+          }
+        }
+      }
+    },
+    "aliases": {
+      "ai-study-logs": {},
+      "logs-current": {}
+    }
+  },
+  "priority": 100,
+  "version": 1,
+  "_meta": {
+    "description": "AI Study Circle application logs template",
+    "created_by": "AI Study Circle Logging System",
+    "created_at": "2025-10-25"
+  }
+}

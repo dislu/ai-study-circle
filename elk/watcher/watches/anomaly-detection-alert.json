@@ -1,0 +1,136 @@
+{
+  "trigger": {
+    "schedule": {
+      "interval": "2m"
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "search_type": "query_then_fetch",
+        "indices": ["ai-study-logs-*"],
+        "rest_total_hits_as_int": true,
+        "body": {
+          "query": {
+            "bool": {
+              "must": [
+                {
+                  "range": {
+                    "@timestamp": {
+                      "gte": "now-10m"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "aggs": {
+            "error_rate": {
+              "date_histogram": {
+                "field": "@timestamp",
+                "fixed_interval": "1m",
+                "min_doc_count": 0
+              },
+              "aggs": {
+                "errors": {
+                  "filter": {
+                    "terms": {
+                      "level.keyword": ["error", "fatal", "critical"]
+                    }
+                  }
+                },
+                "total_requests": {
+                  "filter": {
+                    "exists": {
+                      "field": "response_time"
+                    }
+                  }
+                },
+                "error_percentage": {
+                  "bucket_script": {
+                    "buckets_path": {
+                      "errors": "errors>_count",
+                      "total": "total_requests>_count"
+                    },
+                    "script": "if (params.total > 0) { return (params.errors / params.total) * 100 } else { return 0 }"
+                  }
+                }
+              }
+            },
+            "avg_response_time": {
+              "date_histogram": {
+                "field": "@timestamp",
+                "fixed_interval": "1m",
+                "min_doc_count": 0
+              },
+              "aggs": {
+                "avg_response": {
+                  "avg": {
+                    "field": "response_time"
+                  }
+                }
+              }
+            },
+            "user_activity": {
+              "date_histogram": {
+                "field": "@timestamp",
+                "fixed_interval": "1m",
+                "min_doc_count": 0
+              },
+              "aggs": {
+                "unique_users": {
+                  "cardinality": {
+                    "field": "user_id.keyword"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "script": {
+      "source": "def buckets = ctx.payload.aggregations.error_rate.buckets; def response_buckets = ctx.payload.aggregations.avg_response_time.buckets; def anomalies = 0; def error_threshold = 5.0; def response_threshold = 3000; for (int i = 0; i < buckets.length; i++) { def bucket = buckets[i]; def response_bucket = response_buckets[i]; if (bucket.error_percentage != null && bucket.error_percentage.value > error_threshold) { anomalies++; } if (response_bucket.avg_response != null && response_bucket.avg_response.value > response_threshold) { anomalies++; } } return anomalies >= 3;"
+    }
+  },
+  "transform": {
+    "script": {
+      "source": "def error_buckets = ctx.payload.aggregations.error_rate.buckets; def response_buckets = ctx.payload.aggregations.avg_response_time.buckets; def user_buckets = ctx.payload.aggregations.user_activity.buckets; def anomalies = []; def max_error_rate = 0; def max_response_time = 0; def min_user_activity = 999999; for (int i = 0; i < error_buckets.size(); i++) { def error_bucket = error_buckets[i]; def response_bucket = response_buckets[i]; def user_bucket = user_buckets[i]; def error_rate = error_bucket.error_percentage != null ? error_bucket.error_percentage.value : 0; def response_time = response_bucket.avg_response != null ? response_bucket.avg_response.value : 0; def user_count = user_bucket.unique_users != null ? user_bucket.unique_users.value : 0; if (error_rate > 5.0) { anomalies.add(['type': 'high_error_rate', 'value': error_rate, 'timestamp': error_bucket.key_as_string, 'threshold': 5.0]); } if (response_time > 3000) { anomalies.add(['type': 'slow_response', 'value': Math.round(response_time), 'timestamp': response_bucket.key_as_string, 'threshold': 3000]); } if (user_count < 5 && user_count > 0) { anomalies.add(['type': 'low_user_activity', 'value': user_count, 'timestamp': user_bucket.key_as_string, 'threshold': 5]); } max_error_rate = Math.max(max_error_rate, error_rate); max_response_time = Math.max(max_response_time, response_time); min_user_activity = Math.min(min_user_activity, user_count); } def severity = 'medium'; if (max_error_rate > 15 || max_response_time > 8000) { severity = 'high'; } if (max_error_rate > 25 || max_response_time > 15000) { severity = 'critical'; } return ['anomalies': anomalies, 'max_error_rate': Math.round(max_error_rate * 10) / 10, 'max_response_time': Math.round(max_response_time), 'min_user_activity': min_user_activity, 'severity': severity, 'anomaly_count': anomalies.size(), 'timestamp': ctx.trigger.triggered_time];"
+    }
+  },
+  "actions": {
+    "anomaly_alert": {
+      "email": {
+        "profile": "standard",
+        "to": ["monitoring@ai-study-circle.com", "devops@ai-study-circle.com"],
+        "subject": "🔍 System Anomalies Detected - AI Study Circle",
+        "body": {
+          "html": "<h2>🔍 System Anomaly Detection Alert</h2><p><strong>Severity:</strong> {{ctx.payload.severity}}</p><p><strong>Anomalies Detected:</strong> {{ctx.payload.anomaly_count}}</p><p><strong>Detection Time:</strong> {{ctx.payload.timestamp}}</p><h3>📊 Summary Metrics:</h3><ul><li><strong>Maximum Error Rate:</strong> {{ctx.payload.max_error_rate}}%</li><li><strong>Maximum Response Time:</strong> {{ctx.payload.max_response_time}}ms</li><li><strong>Minimum User Activity:</strong> {{ctx.payload.min_user_activity}} users</li></ul><h3>🔍 Detected Anomalies:</h3><ul>{{#ctx.payload.anomalies}}<li><strong>{{type}}:</strong> {{value}} (threshold: {{threshold}}) at {{timestamp}}</li>{{/ctx.payload.anomalies}}</ul><p><strong>Recommended Actions:</strong></p><ul><li>Review system health in the <a href=\"http://localhost:5601/app/kibana#/dashboard/application-health-monitoring\">Health Dashboard</a></li><li>Check resource utilization and system logs</li><li>Investigate potential causes of performance degradation</li><li>Monitor user experience and error patterns</li></ul>"
+        }
+      }
+    },
+    "anomaly_webhook": {
+      "webhook": {
+        "scheme": "http",
+        "host": "localhost",
+        "port": 5000,
+        "method": "post",
+        "path": "/api/alerts/anomaly",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": "{ \"alert_type\": \"system_anomaly\", \"severity\": \"{{ctx.payload.severity}}\", \"anomaly_count\": {{ctx.payload.anomaly_count}}, \"max_error_rate\": {{ctx.payload.max_error_rate}}, \"max_response_time\": {{ctx.payload.max_response_time}}, \"min_user_activity\": {{ctx.payload.min_user_activity}}, \"anomalies\": {{#toJson}}ctx.payload.anomalies{{/toJson}}, \"timestamp\": \"{{ctx.payload.timestamp}}\" }"
+      }
+    }
+  },
+  "throttle_period": "5m",
+  "metadata": {
+    "name": "Anomaly Detection Monitor",
+    "description": "Detects system anomalies in error rates, response times, and user activity patterns",
+    "created_by": "AI Study Circle ML Team",
+    "version": "1.0.0",
+    "tags": ["anomaly-detection", "ml-monitoring", "system-health"]
+  }
+}
