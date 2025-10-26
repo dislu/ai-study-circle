@@ -1,5 +1,9 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { NotificationProvider } from '@/contexts/NotificationContext'
+import { OnboardingProvider } from '@/contexts/OnboardingContext'
+import OnboardingTour from '@/components/OnboardingTour'
 
 export const metadata: Metadata = {
   title: 'AI Study Circle - Intelligent Content Analysis',
@@ -17,9 +21,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-gray-50">
-        <div className="min-h-screen">
-          {children}
-        </div>
+        <AuthProvider>
+          <NotificationProvider>
+            <OnboardingProvider>
+              <div className="min-h-screen">
+                {children}
+                <OnboardingTour />
+              </div>
+            </OnboardingProvider>
+          </NotificationProvider>
+        </AuthProvider>
       </body>
     </html>
   )

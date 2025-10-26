@@ -1,32 +1,42 @@
 'use client';
 
-import { Sparkles, Github, Heart } from 'lucide-react';
+import { Sparkles, Github, User, LogOut } from 'lucide-react';
+import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import NotificationCenter from './NotificationCenter';
 
 export default function Header() {
+  const { user, isAuthenticated, logout } = useAuth();
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
+          <Link href={isAuthenticated ? "/dashboard" : "/"} className="flex items-center space-x-2">
             <Sparkles className="h-8 w-8 text-primary-600" />
             <div>
               <h1 className="text-xl font-bold text-gray-900">AI Study Circle</h1>
               <p className="text-xs text-gray-500">Intelligent Content Analysis</p>
             </div>
-          </div>
+          </Link>
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#features" className="text-gray-600 hover:text-gray-900 text-sm">
+            <Link href="/features" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">
               Features
-            </a>
-            <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 text-sm">
+            </Link>
+            <Link href="/how-it-works" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">
               How it Works
-            </a>
-            <a href="#about" className="text-gray-600 hover:text-gray-900 text-sm">
+            </Link>
+            <Link href="/about" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">
               About
-            </a>
+            </Link>
+            {isAuthenticated && (
+              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">
+                Dashboard
+              </Link>
+            )}
           </nav>
 
           {/* Actions */}
@@ -41,9 +51,29 @@ export default function Header() {
               <Github className="h-5 w-5" />
             </a>
             
-            <button className="btn-primary">
-              Get Started
-            </button>
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-3">
+                <div data-tour="notifications">
+                  <NotificationCenter />
+                </div>
+                <Link href="/dashboard" className="btn btn-outline flex items-center space-x-2">
+                  <User className="h-4 w-4" />
+                  <span>Dashboard</span>
+                </Link>
+                <button
+                  onClick={logout}
+                  className="btn btn-outline text-red-600 border-red-300 hover:bg-red-50 flex items-center space-x-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link href="/auth?mode=signin" className="btn btn-outline">Sign In</Link>
+                <Link href="/auth?mode=signup" className="btn btn-primary">Sign Up</Link>
+              </>
+            )}
           </div>
         </div>
       </div>
