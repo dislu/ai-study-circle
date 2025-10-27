@@ -30,18 +30,18 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      // Mock API call - replace with actual API endpoint
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
 
       if (response.ok) {
+        const data = await response.json();
         setStep('sent');
       } else {
         const error = await response.json();
-        setError(error.message || 'Something went wrong. Please try again.');
+        setError(error.error || 'Something went wrong. Please try again.');
       }
     } catch (error) {
       setError('Network error. Please check your connection and try again.');

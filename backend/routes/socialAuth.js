@@ -1,6 +1,7 @@
 const express = require('express');
 const passport = require('passport');
 const AuthService = require('../services/AuthService');
+const EmailService = require('../services/EmailService');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -368,18 +369,17 @@ router.post('/send-verification', authenticateToken, async (req, res) => {
     // Generate verification token
     const crypto = require('crypto');
     const verificationToken = crypto.randomBytes(32).toString('hex');
-
+    
     user.emailVerificationToken = verificationToken;
+    user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
     await user.save();
 
-    // TODO: Send verification email using nodemailer
-    // For now, return the token (in production, this should be sent via email)
+    // Send verification email
+    await EmailService.sendVerificationEmail(user.email, user.fullName || user.name, verificationToken);
     
     res.json({
       success: true,
-      message: 'Verification email sent',
-      // Remove this in production
-      ...(process.env.NODE_ENV === 'development' && { token: verificationToken })
+      message: 'Verification email sent successfully'
     });
   } catch (error) {
     console.error('Send verification error:', error);

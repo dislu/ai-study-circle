@@ -79,24 +79,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
       
-      // Mock login - in real app, call your backend API
-      if (email && password) {
-        const mockUser: User = {
-          id: '1',
-          name: email.split('@')[0],
-          email: email,
-          avatar: '👨‍💻'
-        };
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
         
-        const mockToken = 'mock-jwt-token-' + Date.now();
-        
-        localStorage.setItem('token', mockToken);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
-        
-        return true;
+        if (data.success && data.token && data.user) {
+          const user: User = {
+            id: data.user.id,
+            name: data.user.fullName || data.user.firstName || data.user.username,
+            email: data.user.email,
+            avatar: data.user.avatar || '👨‍💻'
+          };
+          
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(user));
+          setUser(user);
+          return true;
+        }
       }
       
+      const errorData = await response.json();
+      console.error('Login failed:', errorData.error || 'Unknown error');
       return false;
     } catch (error) {
       console.error('Login failed:', error);
@@ -110,24 +120,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
       
-      // Mock signup - in real app, call your backend API
-      if (name && email && password) {
-        const mockUser: User = {
-          id: Date.now().toString(),
-          name: name,
-          email: email,
-          avatar: '👨‍💻'
-        };
+      // Split name into firstName and lastName
+      const nameParts = name.trim().split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: email.split('@')[0], // Use email prefix as username
+          email,
+          password,
+          firstName,
+          lastName
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
         
-        const mockToken = 'mock-jwt-token-' + Date.now();
-        
-        localStorage.setItem('token', mockToken);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
-        
-        return true;
+        if (data.success && data.token && data.user) {
+          const user: User = {
+            id: data.user.id,
+            name: data.user.fullName || data.user.firstName || data.user.username,
+            email: data.user.email,
+            avatar: data.user.avatar || '👨‍💻'
+          };
+          
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(user));
+          setUser(user);
+          return true;
+        }
       }
       
+      const errorData = await response.json();
+      console.error('Signup failed:', errorData.error || 'Unknown error');
       return false;
     } catch (error) {
       console.error('Signup failed:', error);

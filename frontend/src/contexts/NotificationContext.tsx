@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
+import { io, Socket } from 'socket.io-client';
 
 interface Notification {
   id: string;
@@ -37,30 +38,31 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    let ws: WebSocket | null = null;
+    let socket: Socket | null = null;
 
     if (isAuthenticated && user) {
-      // Connect to WebSocket server
+      // Connect to Socket.IO server
       const connectWebSocket = () => {
         try {
-          // Replace with your actual WebSocket server URL
-          ws = new WebSocket(`ws://localhost:3001/ws?userId=${user.id}`);
+          // Connect to Socket.IO server
+          const serverUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+          const token = localStorage.getItem('token');
+          
+          socket = io(serverUrl, {
+            auth: {
+              token: token
+            },
+            transports: ['websocket', 'polling'],
+            autoConnect: true
+          });
 
-          ws.onopen = () => {
+          socket.on('connect', () => {
             console.log('WebSocket connected');
             setIsConnected(true);
-            
-            // Send authentication message
-            ws?.send(JSON.stringify({
-              type: 'auth',
-              token: localStorage.getItem('token')
-            }));
-          };
+          });
 
-          ws.onmessage = (event) => {
+          socket.on('notification', (data) => {
             try {
-              const data = JSON.parse(event.data);
-              
               switch (data.type) {
                 case 'notification':
                   addNotification(data.notification);
@@ -114,24 +116,24 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
             } catch (error) {
               console.error('Error parsing WebSocket message:', error);
             }
-          };
+          });
 
-          ws.onclose = () => {
+          socket.on('disconnect', () => {
             console.log('WebSocket disconnected');
             setIsConnected(false);
-            
-            // Attempt to reconnect after 5 seconds
-            setTimeout(() => {
-              if (isAuthenticated && user) {
-                connectWebSocket();
-              }
-            }, 5000);
-          };
+          });
 
-          ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
+          socket.on('connect_error', (error) => {
+            console.error('WebSocket connection error:', error);
             setIsConnected(false);
-          };
+          });
+
+          // Enable auto-reconnection
+          socket.on('reconnect', () => {
+            console.log('WebSocket reconnected');
+            setIsConnected(true);
+          });
+
         } catch (error) {
           console.error('Failed to connect to WebSocket:', error);
           setIsConnected(false);
@@ -142,8 +144,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     }
 
     return () => {
-      if (ws) {
-        ws.close();
+      if (socket) {
+        socket.disconnect();
       }
     };
   }, [isAuthenticated, user]);

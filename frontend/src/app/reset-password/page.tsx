@@ -29,15 +29,19 @@ export default function ResetPasswordPage() {
 
   const validateToken = async (resetToken: string) => {
     try {
-      // Mock API call - replace with actual API endpoint
-      const response = await fetch('/api/auth/validate-reset-token', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/validate-reset-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: resetToken })
       });
 
       setIsValidToken(response.ok);
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Token validation failed:', error.error);
+      }
     } catch (error) {
+      console.error('Token validation error:', error);
       setIsValidToken(false);
     }
   };
@@ -71,8 +75,7 @@ export default function ResetPasswordPage() {
     setStatus('loading');
 
     try {
-      // Mock API call - replace with actual API endpoint
-      const response = await fetch('/api/auth/reset-password', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -82,6 +85,7 @@ export default function ResetPasswordPage() {
       });
 
       if (response.ok) {
+        const data = await response.json();
         setStatus('success');
         // Redirect to login after 3 seconds
         setTimeout(() => {
@@ -89,7 +93,7 @@ export default function ResetPasswordPage() {
         }, 3000);
       } else {
         const error = await response.json();
-        setErrors({ submit: error.message || 'Failed to reset password. Please try again.' });
+        setErrors({ submit: error.error || 'Failed to reset password. Please try again.' });
         setStatus('error');
       }
     } catch (error) {

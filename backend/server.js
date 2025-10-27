@@ -21,8 +21,10 @@ const databaseFactory = require('./config/database-factory');
 const authRoutes = require('./routes/auth');
 const socialAuthRoutes = require('./routes/socialAuth');
 const uploadRoutes = require('./routes/upload');
+const documentsRoutes = require('./routes/documents');
 const summaryRoutes = require('./routes/summary');
 const examRoutes = require('./routes/exam');
+const chatRoutes = require('./routes/chat');
 const statusRoutes = require('./routes/status');
 const exportRoutes = require('./routes/export');
 const analyticsRoutes = require('./routes/analytics');
@@ -39,6 +41,7 @@ const alertRoutes = require('./routes/alerts');
 
 // Import and initialize authentication service
 const AuthService = require('./services/AuthService');
+const WebSocketService = require('./services/WebSocketService');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
@@ -137,6 +140,7 @@ const translationWrapper = translationMiddleware.wrapResponseWithTranslation();
 app.use('/api/auth', authRoutes);
 app.use('/api/social', socialAuthRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/documents', documentsRoutes);
 
 // AI agent routes with automatic translation support
 app.use('/api/summary', 
@@ -148,6 +152,11 @@ app.use('/api/exam',
   translationMiddleware.translateContent(), 
   translationWrapper, 
   examRoutes
+);
+app.use('/api/chat', 
+  translationMiddleware.translateContent(), 
+  translationWrapper, 
+  chatRoutes
 );
 
 // Other routes without translation (no content processing)
@@ -252,10 +261,14 @@ const server = app.listen(PORT, () => {
     timestamp: new Date().toISOString()
   });
   
+  // Initialize WebSocket server
+  WebSocketService.initialize(server);
+  
   console.log(`🚀 AI Study Circle Backend running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📝 Logs endpoint: http://localhost:${PORT}/api/logs`);
+  console.log(`🔌 WebSocket server: ws://localhost:${PORT}`);
 });
 
 // Handle server errors

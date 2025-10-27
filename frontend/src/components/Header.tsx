@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles, Github, User, LogOut } from 'lucide-react';
+import { Sparkles, Github, User, LogOut, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationCenter from './NotificationCenter';
@@ -33,9 +33,14 @@ export default function Header() {
               About
             </Link>
             {isAuthenticated && (
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">
-                Dashboard
-              </Link>
+              <>
+                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">
+                  Dashboard
+                </Link>
+                <Link href="/chat" className="text-gray-600 hover:text-gray-900 text-sm transition-colors">
+                  AI Chat
+                </Link>
+              </>
             )}
           </nav>
 

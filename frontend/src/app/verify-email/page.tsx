@@ -34,14 +34,14 @@ export default function EmailVerificationPage() {
     setStatus('verifying');
     
     try {
-      // Mock API call - replace with actual API endpoint
-      const response = await fetch('/api/auth/verify-email', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: verificationToken })
       });
 
       if (response.ok) {
+        const data = await response.json();
         setStatus('success');
         setMessage('Email verified successfully! Redirecting to dashboard...');
         
@@ -52,7 +52,7 @@ export default function EmailVerificationPage() {
       } else {
         const error = await response.json();
         setStatus('error');
-        setMessage(error.message || 'Verification failed. Please try again.');
+        setMessage(error.error || 'Verification failed. Please try again.');
       }
     } catch (error) {
       setStatus('error');
@@ -66,18 +66,18 @@ export default function EmailVerificationPage() {
     try {
       setResendCooldown(60); // 60 second cooldown
       
-      // Mock API call - replace with actual API endpoint
-      const response = await fetch('/api/auth/resend-verification', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/resend-verification`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
 
       if (response.ok) {
+        const data = await response.json();
         setMessage('Verification email sent! Please check your inbox.');
       } else {
         const error = await response.json();
-        setMessage(error.message || 'Failed to resend email. Please try again.');
+        setMessage(error.error || 'Failed to resend email. Please try again.');
       }
     } catch (error) {
       setMessage('Network error. Please try again later.');

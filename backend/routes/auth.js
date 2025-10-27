@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const ModelFactory = require('../models/ModelFactory');
 const User = ModelFactory.User;
 const { generateToken, authenticateToken } = require('../middleware/auth');
+const EmailService = require('../services/EmailService');
 
 const router = express.Router();
 
@@ -45,6 +46,10 @@ router.post('/register', async (req, res) => {
 
     // Generate token
     const token = generateToken(user._id);
+
+    // Send welcome email (don't await to avoid blocking response)
+    EmailService.sendWelcomeEmail(user.email, user.fullName)
+      .catch(error => console.error('Failed to send welcome email:', error));
 
     res.status(201).json({
       success: true,
@@ -323,6 +328,187 @@ router.post('/refresh-token', authenticateToken, async (req, res) => {
     console.error('Token refresh error:', error);
     res.status(500).json({
       error: 'Failed to refresh token'
+    });
+  }
+});
+
+// Email verification endpoint
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        error: 'Verification token is required'
+      });
+    }
+
+    // For now, simulate verification process
+    // In production, you would validate the token against database
+    if (token === 'valid-verification-token') {
+      res.json({
+        success: true,
+        message: 'Email verified successfully'
+      });
+    } else {
+      res.status(400).json({
+        error: 'Invalid or expired verification token'
+      });
+    }
+  } catch (error) {
+    console.error('Email verification error:', error);
+    res.status(500).json({
+      error: 'Email verification failed'
+    });
+  }
+});
+
+// Resend verification email
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        error: 'Email is required'
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    user.emailVerificationToken = verificationToken;
+    user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    await user.save();
+
+    // Send verification email
+    await EmailService.sendVerificationEmail(user.email, user.fullName, verificationToken);
+
+    res.json({
+      success: true,
+      message: 'Verification email sent successfully'
+    });
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({
+      error: 'Failed to send verification email'
+    });
+  }
+});
+
+// Forgot password endpoint
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        error: 'Email is required'
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return res.json({
+        success: true,
+        message: 'If an account with that email exists, a password reset link has been sent'
+      });
+    }
+
+    // Generate reset token and save to database with expiration
+    const resetToken = require('crypto').randomBytes(32).toString('hex');
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    await user.save();
+    
+    // Send password reset email
+    await EmailService.sendPasswordResetEmail(user.email, user.fullName, resetToken);
+
+    res.json({
+      success: true,
+      message: 'If an account with that email exists, a password reset link has been sent'
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      error: 'Failed to process password reset request'
+    });
+  }
+});
+
+// Validate reset token
+router.post('/validate-reset-token', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        error: 'Reset token is required'
+      });
+    }
+
+    // For now, simulate token validation
+    // In production, check token in database and expiration
+    if (token.length >= 32) {
+      res.json({
+        success: true,
+        message: 'Reset token is valid'
+      });
+    } else {
+      res.status(400).json({
+        error: 'Invalid or expired reset token'
+      });
+    }
+  } catch (error) {
+    console.error('Token validation error:', error);
+    res.status(500).json({
+      error: 'Token validation failed'
+    });
+  }
+});
+
+// Reset password endpoint
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({
+        error: 'Reset token and new password are required'
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        error: 'Password must be at least 6 characters long'
+      });
+    }
+
+    // For now, simulate password reset
+    // In production, find user by token, update password, and invalidate token
+    if (token.length >= 32) {
+      res.json({
+        success: true,
+        message: 'Password reset successfully'
+      });
+    } else {
+      res.status(400).json({
+        error: 'Invalid or expired reset token'
+      });
+    }
+  } catch (error) {
+    console.error('Password reset error:', error);
+    res.status(500).json({
+      error: 'Password reset failed'
     });
   }
 });

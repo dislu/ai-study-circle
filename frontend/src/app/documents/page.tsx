@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, BookOpen, ClipboardCheck, Download, Trash2, Eye, Calendar, FileIcon, Search, Filter } from 'lucide-react';
 import Header from '@/components/Header';
+import { useNotification } from '@/contexts/NotificationContext';
 
 interface Document {
   id: string;
@@ -21,67 +22,45 @@ export default function DocumentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'processing' | 'failed'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'size'>('date');
+  const { notifications } = useNotification();
 
   useEffect(() => {
-    // Mock documents data
-    setDocuments([
-      {
-        id: '1',
-        name: 'Machine Learning Fundamentals.pdf',
-        type: 'pdf',
-        size: '2.4 MB',
-        uploadDate: '2024-01-20',
-        status: 'completed',
-        summaryGenerated: true,
-        examGenerated: true,
-        wordsCount: 12450
-      },
-      {
-        id: '2',
-        name: 'Python Programming Guide.docx',
-        type: 'doc',
-        size: '1.8 MB',
-        uploadDate: '2024-01-19',
-        status: 'completed',
-        summaryGenerated: true,
-        examGenerated: false,
-        wordsCount: 8920
-      },
-      {
-        id: '3',
-        name: 'Data Structures Notes.txt',
-        type: 'txt',
-        size: '456 KB',
-        uploadDate: '2024-01-18',
-        status: 'processing',
-        summaryGenerated: false,
-        examGenerated: false,
-        wordsCount: 0
-      },
-      {
-        id: '4',
-        name: 'Web Development Course.pdf',
-        type: 'pdf',
-        size: '3.2 MB',
-        uploadDate: '2024-01-17',
-        status: 'failed',
-        summaryGenerated: false,
-        examGenerated: false,
-        wordsCount: 0
-      },
-      {
-        id: '5',
-        name: 'Algorithm Analysis.pdf',
-        type: 'pdf',
-        size: '1.9 MB',
-        uploadDate: '2024-01-16',
-        status: 'completed',
-        summaryGenerated: true,
-        examGenerated: true,
-        wordsCount: 9850
-      }
-    ]);
+    fetchDocuments();
   }, []);
+
+  // Listen for document processing notifications and refresh data
+  useEffect(() => {
+    const documentNotifications = notifications.filter(n => 
+      n.actionUrl?.includes('/documents') && 
+      (n.title.includes('Document Processed') || n.title.includes('Processing Failed'))
+    );
+    
+    if (documentNotifications.length > 0) {
+      // Refresh documents when processing notifications arrive
+      fetchDocuments();
+    }
+  }, [notifications]);
+
+  const fetchDocuments = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setDocuments(data.documents || []);
+      } else {
+        console.error('Failed to fetch documents');
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      // Fallback to empty array on error
+      setDocuments([]);
+    }
+  };
 
   const getFileIcon = (type: string) => {
     return <FileIcon className="h-8 w-8 text-blue-600" />;

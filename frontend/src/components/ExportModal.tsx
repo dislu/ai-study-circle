@@ -37,7 +37,6 @@ export default function ExportModal({ isOpen, onClose, content }: ExportModalPro
     setExportStatus('idle');
 
     try {
-      // Mock export process - replace with actual export logic
       const exportData = {
         format: exportFormat,
         content: content.data,
@@ -46,8 +45,7 @@ export default function ExportModal({ isOpen, onClose, content }: ExportModalPro
         type: content.type
       };
 
-      // Simulate API call to export service
-      const response = await fetch('/api/export', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/export`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +70,9 @@ export default function ExportModal({ isOpen, onClose, content }: ExportModalPro
           onClose();
         }, 2000);
       } else {
-        throw new Error('Export failed');
+        const errorData = await response.json();
+        console.error('Export failed:', errorData.error || 'Unknown error');
+        throw new Error(errorData.error || 'Export failed');
       }
     } catch (error) {
       console.error('Export error:', error);
